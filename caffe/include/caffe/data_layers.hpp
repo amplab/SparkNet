@@ -328,7 +328,7 @@ class JavaDataLayer : public BaseDataLayer<Dtype> {
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual ~JavaDataLayer() { delete[] buffer_; }
+  virtual ~JavaDataLayer() { delete[] buffer_; delete[] java_shape_; }
 
   virtual inline const char* type() const { return "JavaData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
