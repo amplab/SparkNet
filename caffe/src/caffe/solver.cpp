@@ -411,6 +411,39 @@ void Solver<Dtype>::Test(const int test_net_id) {
 }
 
 template <typename Dtype>
+Dtype Solver<Dtype>::TestAndStoreResult(const int test_net_id, int num_steps, vector<Dtype>* test_score) {
+  CHECK(Caffe::root_solver());
+  CHECK_NOTNULL(test_nets_[test_net_id].get())->
+      ShareTrainedLayersWith(net_.get());
+  const shared_ptr<Net<Dtype> >& test_net = test_nets_[test_net_id];
+  vector<Blob<Dtype>*> bottom_vec;
+  Dtype loss = 0;
+  for (int i = 0; i < num_steps; ++i) {
+    Dtype iter_loss;
+    const vector<Blob<Dtype>*>& result =
+        test_net->Forward(bottom_vec, &iter_loss);
+    loss += iter_loss;
+    if (i == 0) {
+      for (int j = 0; j < result.size(); ++j) {
+        const Dtype* result_vec = result[j]->cpu_data();
+        for (int k = 0; k < result[j]->count(); ++k) {
+          test_score->push_back(result_vec[k]);
+        }
+      }
+    } else {
+      int idx = 0;
+      for (int j = 0; j < result.size(); ++j) {
+        const Dtype* result_vec = result[j]->cpu_data();
+        for (int k = 0; k < result[j]->count(); ++k) {
+          (*test_score)[idx++] += result_vec[k];
+        }
+      }
+    }
+  }
+  return loss;
+}
+
+template <typename Dtype>
 void Solver<Dtype>::Snapshot() {
   CHECK(Caffe::root_solver());
   string model_filename;
