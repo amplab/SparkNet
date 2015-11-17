@@ -15,7 +15,7 @@ void JavaDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   java_shape_ = new int[shape.dim_size() - 1]; // exclude batch size
   size_ = 1;
   for(int i = 1; i < shape.dim_size(); ++i) { // batch_size is not part of size
-    java_shape_[i-1] = shape.dim(i);
+    java_shape_[i - 1] = shape.dim(i);
     size_ *= shape.dim(i);
   }
   CHECK_GT(batch_size_ * size_, 0) <<
@@ -23,7 +23,7 @@ void JavaDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       " positive in memory_data_param";
   top[0]->Reshape(shape_);
   buffer_ = new Dtype[batch_size_ * size_];
-  for(int i = 0; i < batch_size_ * size_; i++) {
+  for(int i = 0; i < batch_size_ * size_; ++i) {
   	buffer_[i] = static_cast<Dtype>(0.0);
   }
 }
@@ -38,7 +38,7 @@ void JavaDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   CHECK(java_callback_) << "JavaDataLayer needs to be initalized by calling SetCallback";
   // Get data from scala
-  java_callback_(static_cast<void*>(buffer_), batch_size_, shape_.dim_size()-1, java_shape_);
+  java_callback_(static_cast<void*>(buffer_), batch_size_, shape_.dim_size() - 1, java_shape_);
   top[0]->Reshape(shape_);
   top[0]->set_cpu_data(buffer_);
 }
