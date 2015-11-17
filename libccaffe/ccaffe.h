@@ -12,6 +12,8 @@ extern "C" {
 	// initialize glog
 	void init_logging(const char* log_filename, int log_verbosity);
 
+	void set_basepath(const char* path);
+
 	int get_int_size(); // get number of bytes for native int
 	int get_dtype_size(); // get number of bytes for DTYPE
 

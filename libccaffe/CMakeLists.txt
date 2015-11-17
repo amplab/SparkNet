@@ -56,6 +56,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../caffe/src/)
 ## The files
 
 file(GLOB Source GLOB "${CMAKE_CURRENT_SOURCE_DIR}/../caffe/src/caffe/*.cpp")
+file(GLOB SourceSolvers GLOB "${CMAKE_CURRENT_SOURCE_DIR}/../caffe/src/caffe/solvers/*.cpp")
 file(GLOB SourceUtil GLOB "${CMAKE_CURRENT_SOURCE_DIR}/../caffe/src/caffe/util/*.cpp")
 file(GLOB SourceGPUUtil GLOB "${CMAKE_CURRENT_SOURCE_DIR}/../caffe/src/caffe/util/*.cu")
 file(GLOB SourceLayers GLOB "${CMAKE_CURRENT_SOURCE_DIR}/../caffe/src/caffe/layers/*.cpp")
@@ -65,16 +66,16 @@ set(CUDA_NVCC_FLAGS "-gencode=arch=compute_20,code=\"sm_20,compute_20\" -gencode
 
 # force generation of proto header
 add_library(proto STATIC ${CMAKE_CURRENT_SOURCE_DIR}/../caffe/include/caffe/proto/caffe.pb.h ${ProtoSources})
-set(Caffe_LINKER_LIBS ${OpenCV_LIBS} proto ${Caffe_LINKER_LIBS})
+set(Caffe_LINKER_LIBS proto ${Caffe_LINKER_LIBS})
 
 if(CUDA_FOUND)
-	cuda_add_library(ccaffe SHARED ${ProtoSources} ${ProtoHeaders} ${Source} ${SourceLayers} ${SourceGPULayers} ${SourceUtil} ${SourceGPUUtil} scalacaffe.cpp ${CMAKE_CURRENT_SOURCE_DIR}/../caffe/include/caffe/proto/caffe.pb.h)
+	cuda_add_library(ccaffe SHARED ${ProtoSources} ${ProtoHeaders} ${Source} ${SourceSolvers} ${SourceLayers} ${SourceGPULayers} ${SourceUtil} ${SourceGPUUtil} ccaffe.cpp ${CMAKE_CURRENT_SOURCE_DIR}/../caffe/include/caffe/proto/caffe.pb.h)
 
 	cuda_add_cublas_to_target(ccaffe)
 
 	target_link_libraries(ccaffe ${PROTOBUF_LIBRARY} ${Caffe_LINKER_LIBS} ${CUDA_LIBRARIES} ${CUDA_curand_LIBRARY})
 else(CUDA_FOUND)
-	add_library(ccaffe SHARED ${ProtoSources} ${ProtoHeaders} ${Source} ${SourceLayers} ${SourceUtil} ccaffe.cpp ${CMAKE_CURRENT_SOURCE_DIR}/../caffe/include/caffe/proto/caffe.pb.h)
+	add_library(ccaffe SHARED ${ProtoSources} ${ProtoHeaders} ${Source} ${SourceSolvers} ${SourceLayers} ${SourceUtil} ccaffe.cpp ${CMAKE_CURRENT_SOURCE_DIR}/../caffe/include/caffe/proto/caffe.pb.h)
 
 	target_link_libraries(ccaffe ${PROTOBUF_LIBRARY} ${Caffe_LINKER_LIBS})
 endif(CUDA_FOUND)

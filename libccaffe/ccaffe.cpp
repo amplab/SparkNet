@@ -6,6 +6,7 @@
 #include "caffe/common.hpp"
 #include <string>
 #include <boost/shared_ptr.hpp>
+#include <unistd.h>
 
 #include <glog/logging.h>
 
@@ -24,6 +25,10 @@ void init_logging(const char* log_filename, int log_verbosity) {
 	google::SetLogDestination(google::INFO, log_filename);
 	google::InitGoogleLogging("scalacaffe");
 	google::SetStderrLogging(log_verbosity);
+}
+
+void set_basepath(const char* path) {
+	chdir(path);
 }
 
 int get_int_size() {
@@ -162,7 +167,7 @@ void solver_test(caffenet_state* state, int num_steps) {
 	state->solver->TestAndStoreResult(0, num_steps, state->test_score);
 }
 
-DTYPE solver_get_test_score(caffenet_state* state, int accuracy_idx) {
+DTYPE get_test_score(caffenet_state* state, int accuracy_idx) {
 	assert(0 <= accuracy_idx && accuracy_idx < state->test_score->size());
 	return (*(state->test_score))[accuracy_idx];
 }
