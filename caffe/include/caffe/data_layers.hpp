@@ -20,6 +20,10 @@
 #define HDF5_DATA_DATASET_NAME "data"
 #define HDF5_DATA_LABEL_NAME "label"
 
+extern "C" {
+  typedef void (*java_callback_t) (void* data, int batch_size, int num_dims, int* shape);
+}
+
 namespace caffe {
 
 /**
@@ -304,6 +308,49 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   Blob<Dtype> added_data_;
   Blob<Dtype> added_label_;
   bool has_new_data_;
+};
+
+/**
+ * @brief Provides data to the Net from Java. The data will come from RDDs
+ * in most cases, but loading the data can involve arbitrary Java code. You
+ * just need to provide a callback that takes a pointer to Dtypes, the
+ * minibatch size, the shape of the data, and will make sure the data has
+ * the right size and store the Dtypes consecutively at the memory location
+ * provided by the pointer.
+ *
+ */
+
+template <typename Dtype>
+class JavaDataLayer : public BaseDataLayer<Dtype> {
+ public:
+  explicit JavaDataLayer(const LayerParameter& param)
+      : BaseDataLayer<Dtype>(param), java_callback_(NULL) {}
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual ~JavaDataLayer() { delete[] buffer_; }
+
+  virtual inline const char* type() const { return "JavaData"; }
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+  void SetCallback(java_callback_t callback);
+
+  int batch_size() { return batch_size_; }
+  int channels() { return shape_.dim(1); }
+  int height() { return shape_.dim(2); }
+  int width() { return shape_.dim(3); }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  int batch_size_;
+  int size_;
+  BlobShape shape_;
+  int* java_shape_; // will be passed to java
+  java_callback_t java_callback_;
+  Dtype* buffer_;
 };
 
 /**
