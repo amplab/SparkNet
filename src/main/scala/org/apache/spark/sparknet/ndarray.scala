@@ -193,8 +193,7 @@ object NDArray {
 
 package org.apache.spark.sparknet
 
-//class NDArray private(val javaArray: JavaNDArray) extends java.io.Serializable {
-class NDArray private(val javaArray: JavaNDArray) {
+class NDArray private(val javaArray: JavaNDArray) extends java.io.Serializable {
   val dim = javaArray.dim
   val shape = javaArray.shape
 
