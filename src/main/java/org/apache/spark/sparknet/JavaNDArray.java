@@ -36,7 +36,7 @@ public class JavaNDArray {
     for (int i = 0; i < dim; i++) {
       newShape[i] = upperOffsets[i] - lowerOffsets[i];
     }
-		return new JavaNDArray(data, dim, JavaNDUtils.copyOf(newShape), offset + JavaNDUtils.dot(lowerOffsets, strides), strides); // todo: why copy shape (shape used to be an argument, but was it necessary even then?)?
+		return new JavaNDArray(data, dim, JavaNDUtils.copyOf(newShape), offset + JavaNDUtils.dot(lowerOffsets, strides), strides); // todo: why copy shape?
 	}
 
 	public void set(int[] indices, float value) {
@@ -55,28 +55,6 @@ public class JavaNDArray {
 		}
 		return data[ix];
 	}
-
-	/*
-	public void flatCopy(float[] result) {
-		assert(result.length >= JavaNDUtils.arrayProduct(shape));
-		int[] curr = new int[dim];
-		int idx = 0;
-		while (true) {
-			result[idx] = get(curr);
-			int i = dim - 1;
-			// next index
-			while (curr[i] == shape[i] - 1) {
-				if(i == 0)
-					return;
-				i -= 1;
-			}
-			curr[i] += 1;
-			for(int j = dim-1; j > i; j--)
-				curr[j] = 0;
-			idx += 1;
-		}
-	}
-	*/
 
 	public void flatCopy(float[] result) {
 		assert(result.length == JavaNDUtils.arrayProduct(shape));
