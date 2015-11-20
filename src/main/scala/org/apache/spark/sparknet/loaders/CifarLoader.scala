@@ -28,7 +28,7 @@ class CifarLoader(path: String) {
 
   val r = new Random()
   // val perm = Vector() ++ r.shuffle(1 to (nData - 1) toIterable)
-  val indices = Vector() ++ (0 to nData-1) toIterable
+  val indices = Vector() ++ (0 to nData - 1) toIterable
   val trainPerm = Vector() ++ r.shuffle(indices)
   val testPerm = Vector() ++ ((0 to batchSize) toIterable)
 
@@ -47,15 +47,15 @@ class CifarLoader(path: String) {
 
   val fileList = fullFileList diff List(testFile)
 
-  for (i <- 0 to nBatches-1) {
+  for (i <- 0 to nBatches - 1) {
   	readBatch(fileList(i), i, trainImages, trainLabels, trainPerm)
   }
   readBatch(testFile, 0, testImages, testLabels, testPerm)
 
   val meanImage = new Array[Float](size)
 
-  for (i <- 0 to nData-1) {
-  	for(j <- 0 to size-1) {
+  for (i <- 0 to nData - 1) {
+  	for(j <- 0 to size - 1) {
   		meanImage(j) += trainImages(i)(j) / nData
   	}
   }
@@ -64,8 +64,8 @@ class CifarLoader(path: String) {
   subtractMean(testImages)
 
   def subtractMean(images: Array[Array[Float]]) {
-  	for(i <- 0 to images.length-1) {
-  		for(j <- 0 to size-1) {
+  	for(i <- 0 to images.length - 1) {
+  		for(j <- 0 to size - 1) {
   			images(i)(j) -= meanImage(j)
   		}
   	}
@@ -80,10 +80,10 @@ class CifarLoader(path: String) {
 
   	while(nRead != -1) {
       assert(i < batchSize)
-      labels(perm(batch * batchSize + i)) = (buffer(0) & 0xff) * 1.0f // convert to unsigned
+      labels(perm(batch * batchSize + i)) = (buffer(0) & 0xff) * 1.0F // convert to unsigned
       images(perm(batch * batchSize + i)) = new Array[Float](size)
       for(j <- 1 to size) {
-        images(perm(batch * batchSize + i))(j-1) = (buffer(j) & 0xff) * 1.0f // convert to unsigned
+        images(perm(batch * batchSize + i))(j - 1) = (buffer(j) & 0xff) * 1.0F // convert to unsigned
       }
       nRead = inputStream.read(buffer)
       i += 1
