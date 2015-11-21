@@ -1,4 +1,4 @@
-package org.apache.spark.sparknet
+package libs
 
 class NDArray private(val javaArray: JavaNDArray) extends java.io.Serializable {
   val dim = javaArray.dim

@@ -1,10 +1,10 @@
-package org.apache.spark.sparknet
+package apps
 
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 
-import org.apache.spark.sparknet.preprocessing.ScaleAndConvert
-import org.apache.spark.sparknet.loaders.ImageNetLoader
+import preprocessing.ScaleAndConvert
+import loaders.ImageNetLoader
 
 object ImageNetApp {
 	def main(args: Array[String]) {
