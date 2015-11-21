@@ -3,8 +3,8 @@ import org.scalatest._
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 
-import org.apache.spark.sparknet.preprocessing.ScaleAndConvert
-import org.apache.spark.sparknet.loaders.ImageNetLoader
+import preprocessing.ScaleAndConvert
+import loaders.ImageNetLoader
 
 class ImageNetLoaderSpec extends FlatSpec {
 	ignore should "be loadable from S3" in {

@@ -1,4 +1,4 @@
-package org.apache.spark.sparknet.loaders
+package loaders
 
 import java.io.File
 import java.io.FileInputStream

@@ -1,4 +1,4 @@
-package org.apache.spark.sparknet.loaders
+package loaders
 
 import java.net.URI
 import java.io._

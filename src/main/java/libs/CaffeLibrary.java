@@ -1,4 +1,4 @@
-package org.apache.spark.sparknet;
+package libs;
 
 import com.sun.jna.Callback;
 import com.sun.jna.Pointer;

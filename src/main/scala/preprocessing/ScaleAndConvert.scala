@@ -1,6 +1,6 @@
-package org.apache.spark.sparknet.preprocessing
+package preprocessing
 
-import org.apache.spark.sparknet.NDArray
+import libs.NDArray
 import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable.ArrayBuffer
