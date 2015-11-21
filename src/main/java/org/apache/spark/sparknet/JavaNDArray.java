@@ -2,7 +2,7 @@ package org.apache.spark.sparknet;
 
 import java.util.Formatter;
 
-public class JavaNDArray {
+public class JavaNDArray implements java.io.Serializable {
 	protected final float[] data;
   protected final int dim;
 	protected final int[] shape;

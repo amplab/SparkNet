@@ -1,3 +1,5 @@
+package org.apache.spark.sparknet.loaders
+
 import java.net.URI
 import java.io._
 import java.nio.file._

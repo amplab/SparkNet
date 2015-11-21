@@ -6,7 +6,7 @@ import com.sun.jna.Pointer
 // for this test to work, $SPARKNET_HOME/caffe should be the caffe root directory
 // and you need to run $SPARKNET_HOME/caffe/data/cifar10/get_cifar10.sh
 class CifarSpec extends FlatSpec {
-	"A Cifar net" should "get chance digits right on randomly initialized net" in {
+	ignore should "get chance digits right on randomly initialized net" in {
 		val sparkNetHome = sys.env("SPARKNET_HOME")
 		val loader = new CifarLoader(sparkNetHome + "/caffe/data/cifar10/")
 
