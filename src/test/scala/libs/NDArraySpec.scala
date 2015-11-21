@@ -1,5 +1,5 @@
 import org.scalatest._
-import org.apache.spark.sparknet.NDArray
+import libs.NDArray
 
 class NDArraySpec extends FlatSpec {
 	val raw = (0 to 3 * 4 * 5 - 1).toArray.map(x => x.toFloat)

@@ -1,6 +1,6 @@
 import org.scalatest._
-import org.apache.spark.sparknet.loaders.CifarLoader
-import org.apache.spark.sparknet.CaffeLibrary
+import loaders.CifarLoader
+import libs.CaffeLibrary
 import com.sun.jna.Pointer
 
 // for this test to work, $SPARKNET_HOME/caffe should be the caffe root directory
