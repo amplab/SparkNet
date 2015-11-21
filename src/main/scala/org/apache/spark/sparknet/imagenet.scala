@@ -18,9 +18,10 @@ object ImageNetApp {
 		val sc = new SparkContext(conf)
 		val loader = new ImageNetLoader("sparknet")
 		val rdd = loader.apply(sc, "shuffled_trainset/files-shuf-", "train_correct.txt")
-		val repartitionedRDD = rdd.repartition(numWorkers)
-		val converter = new ScaleAndConvert(256, 256)
+		// val repartitionedRDD = rdd.repartition(numWorkers)
+		val repartitionedRDD = rdd
+		val converter = new ScaleAndConvert(100, 256, 256)
 		val result = converter.apply(repartitionedRDD).persist()
-		print("number of training images is " + result.count().toString)
+		print("number of batches is " + result.count().toString)
 	}
 }

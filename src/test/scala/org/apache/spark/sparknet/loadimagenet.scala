@@ -14,6 +14,7 @@ class ImageNetLoaderSpec extends FlatSpec {
 		val rdd = loader.apply(sc, "shuffled_trainset/files-shuf-000", "train_correct.txt")
 		assert(rdd.count == 1281)
 	}
+	// TODO: Update this test
 	ignore should "do preprocessing" in {
 		val conf = new SparkConf().setAppName("ImageLoaderTest").setMaster("local")
 		val sc = new SparkContext(conf)
