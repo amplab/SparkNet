@@ -15,10 +15,10 @@ PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${ProtoFiles})
 include_directories(${CMAKE_BINARY_DIR}) # for protobuf files
 
 add_custom_command(
-	OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/../caffe/include/caffe/proto/caffe.pb.h
-	DEPENDS ${CMAKE_BINARY_DIR}/caffe.pb.h
-	COMMAND ${CMAKE_COMMAND} -E copy
-		${CMAKE_BINARY_DIR}/caffe.pb.h ${CMAKE_CURRENT_SOURCE_DIR}/../caffe/include/caffe/proto/caffe.pb.h)
+  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/../caffe/include/caffe/proto/caffe.pb.h
+  DEPENDS ${CMAKE_BINARY_DIR}/caffe.pb.h
+  COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_BINARY_DIR}/caffe.pb.h ${CMAKE_CURRENT_SOURCE_DIR}/../caffe/include/caffe/proto/caffe.pb.h)
 
 find_package(Boost 1.46 REQUIRED COMPONENTS system thread)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
@@ -40,9 +40,9 @@ list(APPEND Caffe_LINKER_LIBS ${GFLAGS_LIBRARIES})
 
 find_package(CUDA QUIET)
 if(CUDA_FOUND)
-	include_directories(SYSTEM ${CUDA_INCLUDE_DIRS})
+  include_directories(SYSTEM ${CUDA_INCLUDE_DIRS})
 else(CUDA_FOUND)
-	add_definitions(-DCPU_ONLY)
+  add_definitions(-DCPU_ONLY)
 endif(CUDA_FOUND)
 
 ## Other stuff
@@ -69,13 +69,13 @@ add_library(proto STATIC ${CMAKE_CURRENT_SOURCE_DIR}/../caffe/include/caffe/prot
 set(Caffe_LINKER_LIBS proto ${Caffe_LINKER_LIBS})
 
 if(CUDA_FOUND)
-	cuda_add_library(ccaffe SHARED ${ProtoSources} ${ProtoHeaders} ${Source} ${SourceSolvers} ${SourceLayers} ${SourceGPULayers} ${SourceUtil} ${SourceGPUUtil} ccaffe.cpp ${CMAKE_CURRENT_SOURCE_DIR}/../caffe/include/caffe/proto/caffe.pb.h)
+  cuda_add_library(ccaffe SHARED ${ProtoSources} ${ProtoHeaders} ${Source} ${SourceSolvers} ${SourceLayers} ${SourceGPULayers} ${SourceUtil} ${SourceGPUUtil} ccaffe.cpp ${CMAKE_CURRENT_SOURCE_DIR}/../caffe/include/caffe/proto/caffe.pb.h)
 
-	cuda_add_cublas_to_target(ccaffe)
+  cuda_add_cublas_to_target(ccaffe)
 
-	target_link_libraries(ccaffe ${PROTOBUF_LIBRARY} ${Caffe_LINKER_LIBS} ${CUDA_LIBRARIES} ${CUDA_curand_LIBRARY})
+  target_link_libraries(ccaffe ${PROTOBUF_LIBRARY} ${Caffe_LINKER_LIBS} ${CUDA_LIBRARIES} ${CUDA_curand_LIBRARY})
 else(CUDA_FOUND)
-	add_library(ccaffe SHARED ${ProtoSources} ${ProtoHeaders} ${Source} ${SourceSolvers} ${SourceLayers} ${SourceUtil} ccaffe.cpp ${CMAKE_CURRENT_SOURCE_DIR}/../caffe/include/caffe/proto/caffe.pb.h)
+  add_library(ccaffe SHARED ${ProtoSources} ${ProtoHeaders} ${Source} ${SourceSolvers} ${SourceLayers} ${SourceUtil} ccaffe.cpp ${CMAKE_CURRENT_SOURCE_DIR}/../caffe/include/caffe/proto/caffe.pb.h)
 
-	target_link_libraries(ccaffe ${PROTOBUF_LIBRARY} ${Caffe_LINKER_LIBS})
+  target_link_libraries(ccaffe ${PROTOBUF_LIBRARY} ${Caffe_LINKER_LIBS})
 endif(CUDA_FOUND)

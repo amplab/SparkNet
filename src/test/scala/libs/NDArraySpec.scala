@@ -2,8 +2,8 @@ import org.scalatest._
 import libs.NDArray
 
 class NDArraySpec extends FlatSpec {
-	val raw = (0 to 3 * 4 * 5 - 1).toArray.map(x => x.toFloat)
-	val tensor = NDArray(raw, Array(3, 4, 5))
+  val raw = (0 to 3 * 4 * 5 - 1).toArray.map(x => x.toFloat)
+  val tensor = NDArray(raw, Array(3, 4, 5))
   assert(tensor.shape.deep == Array(3, 4, 5).deep)
 
   // test get() and set()

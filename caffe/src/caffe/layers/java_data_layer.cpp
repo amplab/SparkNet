@@ -24,13 +24,13 @@ void JavaDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   top[0]->Reshape(shape_);
   buffer_ = new Dtype[batch_size_ * size_];
   for(int i = 0; i < batch_size_ * size_; ++i) {
-  	buffer_[i] = static_cast<Dtype>(0.0);
+    buffer_[i] = static_cast<Dtype>(0.0);
   }
 }
 
 template <typename Dtype>
 void JavaDataLayer<Dtype>::SetCallback(java_callback_t callback) {
-	java_callback_ = callback;
+  java_callback_ = callback;
 }
 
 template <typename Dtype>
