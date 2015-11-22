@@ -4,7 +4,7 @@ layer {
   type: "JavaData"
   top: "data"
   java_data_param {
-  	shape {
+    shape {
       dim: 100
       dim: 3
       dim: 32
@@ -17,7 +17,7 @@ layer {
   type: "JavaData"
   top: "label"
   java_data_param {
-  	shape {
+    shape {
       dim: 100
       dim: 1
     }
