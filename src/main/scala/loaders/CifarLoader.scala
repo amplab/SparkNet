@@ -34,11 +34,11 @@ class CifarLoader(path: String) {
 
   def getListOfFiles(dir: String) : List[File] = {
     val d = new File(dir)
-  	if (d.exists && d.isDirectory) {
+    if (d.exists && d.isDirectory) {
       d.listFiles.filter(_.getName().split('.').last == "bin").toList
-  	} else {
+    } else {
       List[File]()
-  	}
+    }
   }
 
   val fullFileList = getListOfFiles(path)
@@ -48,27 +48,27 @@ class CifarLoader(path: String) {
   val fileList = fullFileList diff List(testFile)
 
   for (i <- 0 to nBatches - 1) {
-  	readBatch(fileList(i), i, trainImages, trainLabels, trainPerm)
+    readBatch(fileList(i), i, trainImages, trainLabels, trainPerm)
   }
   readBatch(testFile, 0, testImages, testLabels, testPerm)
 
   val meanImage = new Array[Float](size)
 
   for (i <- 0 to nData - 1) {
-  	for(j <- 0 to size - 1) {
-  		meanImage(j) += trainImages(i)(j) / nData
-  	}
+    for(j <- 0 to size - 1) {
+      meanImage(j) += trainImages(i)(j) / nData
+    }
   }
 
   subtractMean(trainImages)
   subtractMean(testImages)
 
   def subtractMean(images: Array[Array[Float]]) {
-  	for(i <- 0 to images.length - 1) {
-  		for(j <- 0 to size - 1) {
-  			images(i)(j) -= meanImage(j)
-  		}
-  	}
+    for(i <- 0 to images.length - 1) {
+      for(j <- 0 to size - 1) {
+        images(i)(j) -= meanImage(j)
+      }
+    }
   }
 
   def readBatch(file: File, batch: Int, images: Array[Array[Float]], labels: Array[Float], perm: Vector[Int]) {
@@ -76,9 +76,9 @@ class CifarLoader(path: String) {
     val inputStream = new FileInputStream(file);
 
     var i = 0
-  	var nRead = inputStream.read(buffer)
+    var nRead = inputStream.read(buffer)
 
-  	while(nRead != -1) {
+    while(nRead != -1) {
       assert(i < batchSize)
       labels(perm(batch * batchSize + i)) = (buffer(0) & 0xff) * 1.0F // convert to unsigned
       images(perm(batch * batchSize + i)) = new Array[Float](size)
