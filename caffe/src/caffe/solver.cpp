@@ -201,15 +201,15 @@ void Solver<Dtype>::Step(int iters) {
   while (iter_ < stop_iter) {
     // zero-init the params
     net_->ClearParamDiffs();
-    if (param_.test_interval() && iter_ % param_.test_interval() == 0
-        && (iter_ > 0 || param_.test_initialization())
-        && Caffe::root_solver()) {
-      TestAll();
-      if (requested_early_exit_) {
-        // Break out of the while loop because stop was requested while testing.
-        break;
-      }
-    }
+    // if (param_.test_interval() && iter_ % param_.test_interval() == 0
+    //     && (iter_ > 0 || param_.test_initialization())
+    //     && Caffe::root_solver()) {
+    //   TestAll();
+    //   if (requested_early_exit_) {
+    //     // Break out of the while loop because stop was requested while testing.
+    //     break;
+    //   }
+    // }
 
     for (int i = 0; i < callbacks_.size(); ++i) {
       callbacks_[i]->on_start();
