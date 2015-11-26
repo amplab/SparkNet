@@ -3,9 +3,14 @@ package libs
 import scala.util.Random
 
 import com.sun.jna.Pointer
+import com.sun.jna.Memory
 import scala.collection.mutable.Map
 import scala.collection.mutable.MutableList
 
+import caffe._
+import caffe.Caffe._
+
+import libs.CaffeLibrary
 import libs.NDArray
 import libs.MinibatchSampler
 
@@ -200,5 +205,17 @@ class CaffeNet(net: Pointer, library: CaffeLibrary) extends Net {
       shape(k) = library.get_axis_shape(blob, k)
     }
     return shape
+  }
+}
+
+object CaffeNet {
+  def apply(solverParameter: SolverParameter): CaffeNet = {
+    val caffeLib = CaffeLibrary.INSTANCE
+    val state = caffeLib.create_state()
+    val byteArr = solverParameter.toByteArray()
+    val ptr = new Memory(byteArr.length)
+    ptr.write(0, byteArr, 0, byteArr.length)
+    caffeLib.load_solver_from_protobuf(state, ptr, byteArr.length)
+    return new CaffeNet(state, caffeLib)
   }
 }
