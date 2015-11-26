@@ -1,11 +1,11 @@
 import org.scalatest._
 import libs.MinibatchSampler
-import libs.NDArray
+import libs.ByteNDArray
 
 class MinibatchSamplerSpec extends FlatSpec {
   val minibatches = Array.range(0, 100).map(
     i => {
-      (Array(NDArray(Array(1F * i), Array(1))), Array(i))
+      (Array(ByteNDArray(Array(i.toByte), Array(1))), Array(i))
     }
   )
 
