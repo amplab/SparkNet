@@ -23,7 +23,7 @@ class WeightCollectionSpec extends FlatSpec {
     print("getWeights() took " + (1F * (endTime - startTime) / 1000).toString + "s\n")
   }
 
-	for (i <- 1 to 3) {
+  for (i <- 1 to 3) {
     val startTime = System.currentTimeMillis()
     net.setWeights(netWeights)
     val endTime = System.currentTimeMillis()
