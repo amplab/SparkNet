@@ -19,11 +19,11 @@ public interface CaffeLibrary extends Library {
   int get_int_size();
   int get_dtype_size();
 
-  Pointer make_net_from_protobuf(String net_param, int net_param_len);
-  Pointer make_solver_from_prototxt(String solver_file_name);
+  Pointer create_state();
+  void destroy_state(Pointer state);
 
-  void destroy_net(Pointer state);
-  void destroy_solver(Pointer state);
+  void load_net_from_protobuf(Pointer state, Pointer net_param, int net_param_len);
+  void load_solver_from_protobuf(Pointer state, Pointer solver_param, int solver_param_len);
 
   int set_train_data_callback(Pointer state, int layer_idx, java_callback_t callback);
   int set_test_data_callback(Pointer state, int layer_idx, java_callback_t callback);
@@ -58,4 +58,10 @@ public interface CaffeLibrary extends Library {
 
   void load_weights_from_file(Pointer state, String filename);
   void restore_solver_from_file(Pointer state, String filename);
+
+  boolean parse_net_prototxt(Pointer state, String filename);
+  boolean parse_solver_prototxt(Pointer state, String filename);
+
+  int get_prototxt_len(Pointer state);
+  Pointer get_prototxt_data(Pointer state);
 }
