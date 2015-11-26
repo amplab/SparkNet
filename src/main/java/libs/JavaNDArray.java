@@ -68,11 +68,17 @@ public class JavaNDArray implements java.io.Serializable {
     result[index] = get(indices);  // we can only call next result.length - 1 times
   }
 
-
   public float[] toFlat() {
     float[] result = new float[JavaNDUtils.arrayProduct(shape)];
     flatCopy(result);
     return result;
+  }
+
+  // Note that this buffer may be larger than the apparent size of the
+  // JavaByteNDArray. This could happen if the current object came from a
+  // subarray or slice call.
+  public float[] getBuffer() {
+    return data;
   }
 
   public void add(JavaNDArray that) {
