@@ -2,9 +2,6 @@ import org.scalatest._
 import libs._
 import java.io._
 
-import com.sun.jna.Pointer;
-import com.sun.jna.Memory;
-
 class WeightCollectionSpec extends FlatSpec {
   val sparkNetHome = sys.env("SPARKNET_HOME")
   System.load(sparkNetHome + "/build/libccaffe.so")
