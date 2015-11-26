@@ -72,6 +72,27 @@ class ScaleAndConvert(batchsize: Int, height: Int, width: Int) extends java.io.S
     )
   }
 
+  def makeMinibatchRDDWithoutCompression(data: RDD[(Array[Float], Int)]) : RDD[(Array[NDArray], Array[Int])] = {
+    data.mapPartitions(
+      it => {
+        val accumulator = new ArrayBuffer[(Array[NDArray], Array[Int])]
+        while (it.hasNext) {
+          val imageMinibatchAccumulator = new ArrayBuffer[NDArray]
+          val labelMinibatchAccumulator = new ArrayBuffer[Int]
+          while (it.hasNext && imageMinibatchAccumulator.length != batchsize) {
+            val (image, label) = it.next
+            imageMinibatchAccumulator += NDArray(image, Array[Int](3, width, height))
+            labelMinibatchAccumulator += label
+          }
+          if (imageMinibatchAccumulator.length == batchsize) {
+            accumulator += ((imageMinibatchAccumulator.toArray, labelMinibatchAccumulator.toArray))
+          }
+        }
+        accumulator.iterator
+      }
+    )
+  }
+
   def apply(data: RDD[(Array[Byte], Int)]) : RDD[(Array[NDArray], Array[Int])] = {
     makeMinibatchRDD(data)
   }
