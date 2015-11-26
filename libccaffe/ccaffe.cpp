@@ -3,8 +3,10 @@
 #include "caffe/sgd_solvers.hpp"
 #include "caffe/data_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/io.hpp"
 #include "caffe/common.hpp"
 #include <string>
+#include <vector>
 #include <boost/shared_ptr.hpp>
 #include <unistd.h>
 
@@ -13,12 +15,15 @@
 #include "ccaffe.h"
 
 using boost::shared_ptr;
+using google::protobuf::Message;
 
 struct caffenet_state {
-  caffe::Net<DTYPE> *net;
-  caffe::Net<DTYPE> *testnet;
-  caffe::Solver<DTYPE> *solver;
-  std::vector<DTYPE> *test_score;
+  caffe::Net<DTYPE> *net; // holds a net, can be used independently of solver and testnet
+  caffe::Solver<DTYPE> *solver; // holds a solver
+  caffe::Net<DTYPE> *testnet; // reference to the the first (and only) testnet of the solver
+  std::vector<DTYPE> *test_score; // scratch space to store test scores
+  Message* proto; // scratch space to store protobuf message
+  std::vector<char>* buffer; // scratch space to pass serialized protobuf to client
 };
 
 void init_logging(const char* log_filename, int log_verbosity) {
@@ -39,34 +44,43 @@ int get_dtype_size() {
   return sizeof(DTYPE);
 }
 
-caffenet_state* make_net_from_protobuf(const char* net_param, int net_param_len) {
+caffenet_state* create_state() {
   caffenet_state *state = new caffenet_state();
+  state->net = NULL;
+  state->testnet = NULL;
+  state->solver = NULL;
+  state->test_score = new std::vector<DTYPE>();
+  state->proto = NULL;
+  state->buffer = new std::vector<char>();
+  return state;
+}
+
+void destroy_state(caffenet_state* state) {
+  if (state->solver != NULL) {
+    delete state->solver;
+  } else if (state->net != NULL) {
+    delete state->net;
+  }
+  if (state->proto != NULL) {
+    delete state->proto;
+  }
+  delete state->test_score;
+  delete state->buffer;
+  delete state;
+}
+
+void load_solver_from_protobuf(caffenet_state* state, const char* solver_param, int solver_param_len) {
+  caffe::SolverParameter param;
+  param.ParseFromString(std::string(solver_param, solver_param_len));
+  state->solver = new caffe::SGDSolver<DTYPE>(param);
+  state->net = state->solver->net().get();
+  state->testnet = state->solver->test_nets()[0].get();
+}
+
+void load_net_from_protobuf(caffenet_state* state, const char* net_param, int net_param_len) {
   caffe::NetParameter param;
   param.ParseFromString(std::string(net_param, net_param_len));
   state->net = new caffe::Net<DTYPE>(param);
-  state->test_score = new std::vector<DTYPE>();
-  return state;
-}
-
-caffenet_state* make_solver_from_prototxt(const char* solver_file_name) {
-  caffenet_state *state = new caffenet_state();
-  state->solver = new caffe::SGDSolver<DTYPE>(std::string(solver_file_name));
-  state->net = state->solver->net().get();
-  state->testnet = state->solver->test_nets()[0].get(); // assumes there is only one test net
-  state->test_score = new std::vector<DTYPE>();
-  return state;
-}
-
-void destroy_net(caffenet_state* state) {
-  delete state->net;
-  delete state->test_score;
-  delete state;
-}
-
-void destroy_solver(caffenet_state* state) {
-  delete state->solver;
-  delete state->test_score;
-  delete state;
 }
 
 int num_layers(caffenet_state* state) {
@@ -194,4 +208,35 @@ void load_weights_from_file(caffenet_state* state, const char* filename) {
 
 void restore_solver_from_file(caffenet_state* state, const char* filename) {
   state->solver->Restore(filename);
+}
+
+template<typename M>
+bool parse_prototxt(caffenet_state* state, const char* filename) {
+  if(!state->proto) {
+    state->proto = new M();
+  } else {
+    delete state->proto;
+    state->proto = new M();
+  }
+  bool success = caffe::ReadProtoFromTextFile(filename, state->proto);
+  int size = state->proto->ByteSize();
+  state->buffer->resize(size);
+  state->proto->SerializeToArray(&(*state->buffer)[0], size);
+  return success;
+}
+
+bool parse_net_prototxt(caffenet_state* state, const char* filename) {
+  return parse_prototxt<caffe::NetParameter>(state, filename);
+}
+
+bool parse_solver_prototxt(caffenet_state* state, const char* filename) {
+  return parse_prototxt<caffe::SolverParameter>(state, filename);
+}
+
+int get_prototxt_len(caffenet_state* state) {
+  return state->buffer->size();
+}
+
+char* get_prototxt_data(caffenet_state* state) {
+  return &(*state->buffer)[0];
 }

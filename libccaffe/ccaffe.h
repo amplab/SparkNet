@@ -17,10 +17,11 @@ extern "C" {
   int get_int_size(); // get number of bytes for native int
   int get_dtype_size(); // get number of bytes for DTYPE
 
-  caffenet_state* make_net_from_protobuf(const char* net_param, int net_param_len);
-  caffenet_state* make_solver_from_prototxt(const char* solver_file_name);
-  void destroy_net(caffenet_state* state);
-  void destroy_solver(caffenet_state* state);
+  caffenet_state* create_state();
+  void destroy_state(caffenet_state* state);
+
+  void load_solver_from_protobuf(caffenet_state* state, const char* solver_param, int solver_param_len);
+  void load_net_from_protobuf(caffenet_state* state, const char* net_param, int net_param_len);
 
   // TODO: Write documentation for these methods (in particular the layer index)
   // Both return an error code: 0 for success, -1 if layer_idx is invalid, -2 if layer is no data layer
@@ -59,4 +60,10 @@ extern "C" {
 
   void load_weights_from_file(caffenet_state* state, const char* filename);
   void restore_solver_from_file(caffenet_state* state, const char* filename);
+
+  bool parse_net_prototxt(caffenet_state* state, const char* filename);
+  bool parse_solver_prototxt(caffenet_state* state, const char* filename);
+
+  int get_prototxt_len(caffenet_state* state);
+  char* get_prototxt_data(caffenet_state* state);
 }

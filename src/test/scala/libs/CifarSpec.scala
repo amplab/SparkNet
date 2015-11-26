@@ -1,12 +1,14 @@
 import org.scalatest._
 import loaders.CifarLoader
 import libs.CaffeLibrary
+import libs.ProtoLoader
 import com.sun.jna.Pointer
+import com.sun.jna.Memory
 
 // for this test to work, $SPARKNET_HOME/caffe should be the caffe root directory
 // and you need to run $SPARKNET_HOME/caffe/data/cifar10/get_cifar10.sh
 class CifarSpec extends FlatSpec {
-  ignore should "get chance digits right on randomly initialized net" in {
+  "CifarNet" should "get chance digits right on randomly initialized net" in {
     val sparkNetHome = sys.env("SPARKNET_HOME")
     val loader = new CifarLoader(sparkNetHome + "/caffe/data/cifar10/")
 
@@ -14,7 +16,15 @@ class CifarSpec extends FlatSpec {
     val caffeLib = CaffeLibrary.INSTANCE
 
     caffeLib.set_basepath(sparkNetHome + "/caffe/")
-    val net = caffeLib.make_solver_from_prototxt(sparkNetHome + "/caffe/examples/cifar10/cifar10_full_java_solver.prototxt")
+    // val net = caffeLib.make_solver_from_prototxt(sparkNetHome + "/caffe/examples/cifar10/cifar10_full_java_solver.prototxt")
+
+    val state = caffeLib.create_state()
+    val solver = ProtoLoader.loadSolverPrototxt(sparkNetHome + "/caffe/examples/cifar10/cifar10_full_java_solver.prototxt")
+
+    val byteArr = solver.toByteArray()
+    val ptr = new Memory(byteArr.length);
+    ptr.write(0, byteArr, 0, byteArr.length)
+    caffeLib.load_solver_from_protobuf(state, ptr, byteArr.length)
 
     val dtypeSize = caffeLib.get_dtype_size()
     val intSize = caffeLib.get_int_size()
@@ -60,23 +70,23 @@ class CifarSpec extends FlatSpec {
 
     val loadTrainImageFn = makeImageCallback(loader.trainImages)
     val loadTrainLabelFn = makeLabelCallback(loader.trainLabels)
-    caffeLib.set_train_data_callback(net, 0, loadTrainImageFn)
-    caffeLib.set_train_data_callback(net, 1, loadTrainLabelFn)
+    caffeLib.set_train_data_callback(state, 0, loadTrainImageFn)
+    caffeLib.set_train_data_callback(state, 1, loadTrainLabelFn)
 
     val loadTestImageFn = makeImageCallback(loader.testImages)
     val loadTestLabelFn = makeLabelCallback(loader.testLabels)
-    caffeLib.set_test_data_callback(net, 0, loadTestImageFn)
-    caffeLib.set_test_data_callback(net, 1, loadTestLabelFn)
+    caffeLib.set_test_data_callback(state, 0, loadTestImageFn)
+    caffeLib.set_test_data_callback(state, 1, loadTestLabelFn)
 
-    caffeLib.solver_test(net, 10) // TODO: shouldn't be hard coded
+    caffeLib.solver_test(state, 10) // TODO: shouldn't be hard coded
 
-    val numTestScores = caffeLib.num_test_scores(net)
+    val numTestScores = caffeLib.num_test_scores(state)
 
     val testScores = new Array[Float](numTestScores)
 
     // perform test on random net
     for (i <- 0 to numTestScores - 1) {
-      testScores(i) = caffeLib.get_test_score(net, i) * 100 // TODO: this batch size shouldn't be hard coded
+      testScores(i) = caffeLib.get_test_score(state, i) * 100 // TODO: this batch size shouldn't be hard coded
     }
 
     assert(70.0 <= testScores(0) && testScores(0) <= 130.0)
