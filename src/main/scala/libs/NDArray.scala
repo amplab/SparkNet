@@ -28,6 +28,10 @@ class NDArray private(val javaArray: JavaNDArray) extends java.io.Serializable {
     return javaArray.toFlat()
   }
 
+  def getBuffer(): Array[Float] = {
+    return javaArray.getBuffer()
+  }
+
   def add(that: NDArray) = {
     javaArray.add(that.javaArray)
   }
