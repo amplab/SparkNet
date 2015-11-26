@@ -47,10 +47,12 @@ object ProtoLoader {
     return loadSolverPrototxtWithNet(solverFilename, netParameter, snapshotPath)
   }
 
-  def replaceDataLayers(netParameter: NetParameter, batchsize: Int, numChannels: Int, height: Int, width: Int): NetParameter = {
+  def replaceDataLayers(netParameter: NetParameter, trainBatchSize: Int, testBatchSize: Int, numChannels: Int, height: Int, width: Int): NetParameter = {
     val netBuilder = netParameter.toBuilder()
-    netBuilder.setLayer(0, RDDLayer("data", shape=List(batchsize, numChannels, height, width)))
-    netBuilder.setLayer(1, RDDLayer("label", shape=List(batchsize, 1)))
+    netBuilder.setLayer(0, RDDLayer("data", shape=List(trainBatchSize, numChannels, height, width), Some(Include.Train)))
+    netBuilder.setLayer(1, RDDLayer("label", shape=List(trainBatchSize, 1), Some(Include.Train)))
+    netBuilder.addLayer(0, RDDLayer("data", shape=List(testBatchSize, numChannels, height, width), Some(Include.Test)))
+    netBuilder.addLayer(1, RDDLayer("label", shape=List(testBatchSize, 1), Some(Include.Test)))
     return netBuilder.build()
   }
 }
