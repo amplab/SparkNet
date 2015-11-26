@@ -12,6 +12,7 @@ import caffe.Caffe._
 
 import libs.CaffeLibrary
 import libs.NDArray
+import libs.ByteNDArray
 import libs.MinibatchSampler
 
 class WeightCollection(val allWeights: Map[String, MutableList[NDArray]], val layerNames: List[String]) extends java.io.Serializable {
@@ -50,9 +51,9 @@ object WeightCollection extends java.io.Serializable {
 }
 
 trait Net {
-  def setTrainData(minibatchSampler: MinibatchSampler, trainPreprocessing: Option[NDArray => NDArray] = None)
+  def setTrainData(minibatchSampler: MinibatchSampler, trainPreprocessing: Option[ByteNDArray => NDArray] = None)
 
-  def setTestData(minibatchSampler: MinibatchSampler, len: Int, testPreprocessing: Option[NDArray => NDArray] = None)
+  def setTestData(minibatchSampler: MinibatchSampler, len: Int, testPreprocessing: Option[ByteNDArray => NDArray] = None)
 
   def train(numSteps: Int)
 
@@ -79,14 +80,14 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
 
   var numTestBatches = None: Option[Int]
 
-  def setTrainData(minibatchSampler: MinibatchSampler, trainPreprocessing: Option[NDArray => NDArray] = None) = {
+  def setTrainData(minibatchSampler: MinibatchSampler, trainPreprocessing: Option[ByteNDArray => NDArray] = None) = {
     imageTrainCallback = Some(makeImageCallback(minibatchSampler, trainPreprocessing))
     labelTrainCallback = Some(makeLabelCallback(minibatchSampler))
     library.set_train_data_callback(state, 0, imageTrainCallback.get)
     library.set_train_data_callback(state, 1, labelTrainCallback.get)
   }
 
-  def setTestData(minibatchSampler: MinibatchSampler, len: Int, testPreprocessing: Option[NDArray => NDArray] = None) = {
+  def setTestData(minibatchSampler: MinibatchSampler, len: Int, testPreprocessing: Option[ByteNDArray => NDArray] = None) = {
     numTestBatches = Some(len)
     imageTestCallback = Some(makeImageCallback(minibatchSampler, testPreprocessing))
     labelTestCallback = Some(makeLabelCallback(minibatchSampler))
@@ -120,10 +121,13 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
         val blob = library.get_weight_blob(state, i, j)
         val shape = getShape(blob)
         assert(shape.deep == allWeights.allWeights(layerNames(i))(j).shape.deep) // check that weights are the correct shape
-        val flatWeights = allWeights.allWeights(layerNames(i))(j).toFlat() // todo: this allocation can be avoided
+        val flatWeights = allWeights.allWeights(layerNames(i))(j).toFlat() // this allocation can be avoided
         val blob_pointer = library.get_data(blob)
-        for (t <- 0 to shape.product - 1) {
+        val size = shape.product
+        var t = 0
+        while (t < size) {
           blob_pointer.setFloat(dtypeSize * t, flatWeights(t))
+          t += 1
         }
       }
     }
@@ -138,8 +142,11 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
         val shape = getShape(blob)
         val data = new Array[Float](shape.product)
         val blob_pointer = library.get_data(blob)
-        for (t <- 0 to shape.product - 1) {
+        val size = shape.product
+        var t = 0
+        while (t < size) {
           data(t) = blob_pointer.getFloat(dtypeSize * t)
+          t += 1
         }
         weightList += NDArray(data, shape)
       }
@@ -148,7 +155,7 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
     return new WeightCollection(allWeights, layerNames)
   }
 
-  private def makeImageCallback(minibatchSampler: MinibatchSampler, preprocessing: Option[NDArray => NDArray] = None): CaffeLibrary.java_callback_t = {
+  private def makeImageCallback(minibatchSampler: MinibatchSampler, preprocessing: Option[ByteNDArray => NDArray] = None): CaffeLibrary.java_callback_t = {
     return new CaffeLibrary.java_callback_t() {
       def invoke(data: Pointer, batchSize: Int, numDims: Int, shape: Pointer) {
         val currentImageBatch = minibatchSampler.nextImageMinibatch()
@@ -165,17 +172,18 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
           val currentImage = currentImageBatch(j)
           val processedImage = {
             if (preprocessing.isEmpty) {
-              currentImage
+              currentImage.toFloatNDArray() // didn't test this code path
             } else {
-              preprocessing.get(currentImage) // apply the preprocessing closure to the current image
+              preprocessing.get(currentImage)
             }
           }
-
           assert(arrayShape.deep == processedImage.shape.deep) // check that the image shape matches the shape Caffe expects
-          val flatImage = processedImage.toFlat()
+          val flatImage = processedImage.toFlat() // this allocation could be avoided
           val flatSize = flatImage.length
-          for (i <- 0 to flatSize - 1) {
+          var i = 0
+          while (i < flatSize) {
             data.setFloat((j * flatSize + i) * dtypeSize, flatImage(i))
+            i += 1
           }
         }
       }

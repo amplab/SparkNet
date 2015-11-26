@@ -1,6 +1,6 @@
 package libs
 
-class MinibatchSampler(minibatchIt: Iterator[(Array[NDArray], Array[Int])], totalNumBatches: Int, numSampledBatches: Int) {
+class MinibatchSampler(minibatchIt: Iterator[(Array[ByteNDArray], Array[Int])], totalNumBatches: Int, numSampledBatches: Int) {
   // The purpose of this method is to take minibatchIt, which is an iterator
   // over images and labels, and to turn it into two iterators, one over images
   // and one over labels. The iterator over images is used to create a callback
@@ -20,7 +20,7 @@ class MinibatchSampler(minibatchIt: Iterator[(Array[NDArray], Array[Int])], tota
   var indicesIndex = 0
   var currMinibatchPosition = -1
 
-  var currMinibatchImages = None: Option[Array[NDArray]]
+  var currMinibatchImages = None: Option[Array[ByteNDArray]]
   var currMinibatchLabels = None: Option[Array[Int]]
 
   private def nextMinibatch() = {
@@ -33,7 +33,7 @@ class MinibatchSampler(minibatchIt: Iterator[(Array[NDArray], Array[Int])], tota
     currMinibatchLabels = Some(labels)
   }
 
-  def nextImageMinibatch(): Array[NDArray] = {
+  def nextImageMinibatch(): Array[ByteNDArray] = {
     if (currMinibatchImages.isEmpty) {
       nextMinibatch()
       return currMinibatchImages.get
