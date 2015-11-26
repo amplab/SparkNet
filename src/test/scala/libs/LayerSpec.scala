@@ -16,8 +16,8 @@ class LayerSpec extends FlatSpec {
     val batchsize = 256
 
     val netParam = NetParam ("LeNet",
-      RDDLayer("data", shape=List(batchsize, 1, 28, 28)),
-      RDDLayer("label", shape=List(batchsize, 1)),
+      RDDLayer("data", shape=List(batchsize, 1, 28, 28), None),
+      RDDLayer("label", shape=List(batchsize, 1), None),
       ConvolutionLayer("conv1", List("data"), kernel=(5,5), numOutput=20),
       PoolingLayer("pool1", List("conv1"), pooling=Pooling.Max, kernel=(2,2), stride=(2,2)),
       ConvolutionLayer("conv2", List("pool1"), kernel=(5,5), numOutput=50),
@@ -38,7 +38,7 @@ class LayerSpec extends FlatSpec {
     caffeLib.load_net_from_protobuf(lenetState, ptr, byteArr.length)
 
     var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/train_val.prototxt")
-    netParameter = ProtoLoader.replaceDataLayers(netParameter, batchsize, 3, 227, 227)
+    netParameter = ProtoLoader.replaceDataLayers(netParameter, batchsize, 100, 3, 227, 227)
     val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/solver.prototxt", netParameter, None)
 
     val state = caffeLib.create_state()
