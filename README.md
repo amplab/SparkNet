@@ -5,8 +5,6 @@ Distributed Neural Networks for Spark
 To run SparkNet, you will need a [Spark](http://spark.apache.org) cluster.
 SparkNet apps can be run using [spark-submit](http://spark.apache.org/docs/latest/submitting-applications.html).
 
-Example SparkNet apps are in `src/main/scala/apps`. To run them, you will need to do a couple things.
-
 ### Dependencies
 For now, you have to install the following.
 However, we intend to release an AMI with these dependencies already installed.
@@ -39,6 +37,7 @@ Dependencies:
 
         cd $SPARKNET_HOME
         sbt assembly
+
 **On each worker:**
 
 1. Clone the SparkNet repository.
@@ -68,7 +67,8 @@ To run ImageNet, do the following:
 
         TODO
 and put them on S3 at `s3://sparknet/ILSVRC2012_val`
-4. Submit a job on the master with
+4. Set the correct value of `sparkNetHome` in `src/main/scala/apps/ImageNetApp.scala`.
+5. Submit a job on the master with
 
         spark-submit --class apps.ImageNetApp $SPARKNET_HOME/target/scala-2.10/sparknet-assembly-0.1-SNAPSHOT.jar n
 where `n` is the number of worker nodes in your Spark cluster.
