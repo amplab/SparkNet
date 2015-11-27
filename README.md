@@ -28,7 +28,7 @@ Dependencies:
 2. Set the `SPARKNET_HOME` environment variable to the SparkNet directory.
 3. Build Caffe by running the following:
 
-        cd $SPARKNET_HOME/caffe
+        cd $SPARKNET_HOME
         mkdir build
         cd build
         cmake ../libccaffe
