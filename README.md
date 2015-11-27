@@ -12,8 +12,7 @@ However, we intend to release an AMI with these dependencies already installed.
 Dependencies:
 
 1. sbt 0.13 - [installation instructions](http://www.scala-sbt.org/0.13/tutorial/Installing-sbt-on-Linux.html)
-2. cuda
-3. protobuf
+2. cuda 7.0 - [installation instructions](http://docs.nvidia.com/cuda/cuda-getting-started-guide-for-linux/#axzz3sjNgyLGA)
 
 ### Setup
 
