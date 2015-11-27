@@ -39,6 +39,7 @@ Dependencies:
 
         cd $SPARKNET_HOME
         sbt assembly
+
 **On each worker:**
 
 1. Clone the SparkNet repository.
