@@ -1,5 +1,6 @@
 # SparkNet
-Distributed Neural Networks for Spark
+Distributed Neural Networks for Spark.
+Details are available in the [paper](http://arxiv.org/abs/1511.06051).
 
 ## Using SparkNet
 To run SparkNet, you will need a [Spark](http://spark.apache.org) cluster.
