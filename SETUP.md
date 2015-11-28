@@ -37,6 +37,8 @@ cmake ../libccaffe
 make -j32
 ```
 
+6.) Create an AMI from the volume
+
 6.) Run the following command to launch the cluster:
 
 ```
