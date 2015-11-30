@@ -138,8 +138,8 @@ object ImageNetApp {
         log("%.2f".format(accuracies(0)) + "% accuracy", i)
       }
 
-      val syncInterval = 50
       log("training", i)
+      val syncInterval = 50
       trainPartitionSizes.zipPartitions(trainMinibatchRDD) (
         (lenIt, trainMinibatchIt) => {
           assert(lenIt.hasNext && trainMinibatchIt.hasNext)

@@ -84,7 +84,6 @@ object CifarApp {
     val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
 
     var i = 0
-    val syncInterval = 10
     while (true) {
       log("broadcasting weights", i)
       val broadcastWeights = sc.broadcast(netWeights)
@@ -108,6 +107,8 @@ object CifarApp {
         log("%.2f".format(accuracies(0)) + "% accuracy", i)
       }
 
+      log("training", i)
+      val syncInterval = 10
       trainPartitionSizes.zipPartitions(trainMinibatchRDD) (
         (lenIt, trainMinibatchIt) => {
           assert(lenIt.hasNext && trainMinibatchIt.hasNext)
