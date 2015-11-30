@@ -2,14 +2,17 @@
 
 Testing the speed of various ways to do callbacks; on pcm's laptop:
 
-0.118: before empty callback
-0.118: before copy callback
-0.148: before simple callback
-0.709: before full callback
-1.753: end
+0.149: before empty callback
+0.149: before copy callback
+0.176: before simple callback
+0.708: before byte image callback
+0.78: before full callback
+1.947: end
+
+(these are cumulative numbers)
 
 Takaway: We can copy stuff out of the array, but fancy indexing is very expensive,
-and also setting floats via JNA is expensive
+and also setting floats via JNA in a loop is expensive
 
 */
 
@@ -54,9 +57,25 @@ class ImageNetBenchmarkSpec extends FlatSpec {
       }
     ).toArray
 
+    val byteImageMinibatch = Array.range(0, trainBatchSize).map(
+      i => {
+        new ByteImage(fullWidth, fullHeight)
+      }
+    ).toArray
+
     val emptyCallback = makeEmptyImageCallback(minibatch)
     val copyCallback = makeCopyImageCallback(minibatch)
     val simpleCallback = makeSimpleImageCallback(minibatch)
+    val preprocessing = (image: ByteImage, buffer: Array[Float]) => {
+      image.cropInto(buffer, Array[Int](0, 0), Array[Int](227, 227))
+      var i = 0
+      while (i < 227 * 227 * 3) {
+        buffer(i) -= 100.0F
+        i += 1
+      }
+      ()
+    }
+    val byteImageCallback = makeByteImageCallback(byteImageMinibatch, Some(preprocessing))
     val fullCallback = makeImageCallback(minibatch)
     val data = new Memory(channels * fullWidth * fullHeight * trainBatchSize * dtypeSize);
 
@@ -66,6 +85,8 @@ class ImageNetBenchmarkSpec extends FlatSpec {
     copyCallback.invoke(data, trainBatchSize, 3, new Pointer(0))
     log("before simple callback")
     simpleCallback.invoke(data, trainBatchSize, 3, new Pointer(0))
+    log("before byte image callback")
+    byteImageCallback.invoke(data, trainBatchSize, 3, new Pointer(0))
     log("before full callback")
     fullCallback.invoke(data, trainBatchSize, 3, new Pointer(0))
     log("end")
@@ -102,6 +123,24 @@ class ImageNetBenchmarkSpec extends FlatSpec {
             data.setFloat((j * flatSize + i) * dtypeSize, 0.0F)
             i += 1
           }
+        }
+      }
+    }
+  }
+
+  private def makeByteImageCallback(minibatch: Array[ByteImage], preprocessing: Option[(ByteImage, Array[Float]) => Unit] = None): CaffeLibrary.java_callback_t = {
+    return new CaffeLibrary.java_callback_t() {
+      def invoke(data: Pointer, batchSize: Int, numDims: Int, shape: Pointer) {
+        var buffer = new Array[Float](227 * 227 * 3)
+        for (j <- 0 to batchSize - 1) {
+          // minibatch(j).cropInto(buffer, Array[Int](0, 0), Array[Int](227, 227));
+          // var i = 0
+          // while(i < 227 * 227 * 3) {
+          //   buffer(i) -= 100.0F
+          //   i += 1
+          // }
+          preprocessing.get(minibatch(j), buffer)
+          data.write(j * 227 * 227 * 3, buffer, 0, 227 * 227 * 3);
         }
       }
     }
