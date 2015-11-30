@@ -40,10 +40,14 @@ class ByteImage {
   }
 
   void cropInto(float[] buffer, int[] lowerOffsets, int[] upperOffsets) {
-    final int w = upperOffsets[0] - lowerOffsets[0];
-    final int h = upperOffsets[1] - lowerOffsets[1];
+    assert(0 <= lowerOffsets[0] && lowerOffsets[0] < upperOffsets[0] && upperOffsets[0] <= height);
+    assert(0 <= lowerOffsets[1] && lowerOffsets[1] < upperOffsets[1] && upperOffsets[1] <= width);
+
+    final int h = upperOffsets[0] - lowerOffsets[0];
+    final int w = upperOffsets[1] - lowerOffsets[1];
     final int lr = lowerOffsets[0];
     final int lc = lowerOffsets[1];
+
     for(int row = 0; row < w; row++) {
       for(int col = 0; col < h; col++) {
         buffer[0 * w * h + row * w + col] = red[(row + lr) * width + (col + lc)];
