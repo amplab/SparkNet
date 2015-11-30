@@ -11,7 +11,7 @@ class WeightCollectionSpec extends FlatSpec {
   val imgSize = 227
 
   var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/train_val.prototxt")
-  netParameter = ProtoLoader.replaceDataLayers(netParameter, batchsize, channels, imgSize, imgSize)
+  netParameter = ProtoLoader.replaceDataLayers(netParameter, batchsize, batchsize, channels, imgSize, imgSize)
   val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/solver.prototxt", netParameter, None)
   val net = CaffeNet(solverParameter)
   var netWeights = net.getWeights()
