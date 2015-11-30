@@ -8,7 +8,8 @@ Testing the speed of various ways to do callbacks; on pcm's laptop:
 0.709: before full callback
 1.753: end
 
-Takaway: We can copy stuff, but fancy indexing is very expensive
+Takaway: We can copy stuff out of the array, but fancy indexing is very expensive,
+and also setting floats via JNA is expensive
 
 */
 
