@@ -54,7 +54,8 @@ To run CifarApp, do the following:
 1. First get the Cifar data with
 
         $SPARKNET_HOME/caffe/data/cifar10/get_cifar10.sh
-2. Then submit the job with `spark-submit`
+2. Set the correct value of `sparkNetHome` in `src/main/scala/apps/CifarApp.scala`.
+3. Then submit the job with `spark-submit`
 
         $SPARK_HOME/bin/spark-submit --class apps.CifarApp SparkNetPreview/target/scala-2.10/sparknetpreview-assembly-0.1-SNAPSHOT.jar 5
 
