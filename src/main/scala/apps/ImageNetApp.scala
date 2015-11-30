@@ -38,7 +38,7 @@ object ImageNetApp {
   def main(args: Array[String]) {
     val numWorkers = args(0).toInt
     val conf = new SparkConf()
-      .setAppName("ImageNetTest")
+      .setAppName("ImageNet")
       .set("spark.driver.maxResultSize", "30G")
       .set("spark.task.maxFailures", "1")
       .set("spark.eventLog.enabled", "true")
@@ -92,7 +92,7 @@ object ImageNetApp {
     val trainPartitionSizes = trainMinibatchRDD.mapPartitions(iter => Array(iter.size).iterator).persist()
     val testPartitionSizes = testMinibatchRDD.mapPartitions(iter => Array(iter.size).iterator).persist()
     log("trainPartitionSizes = " + trainPartitionSizes.collect().deep.toString)
-    log("testPartitionSizes = " + trainPartitionSizes.collect().deep.toString)
+    log("testPartitionSizes = " + testPartitionSizes.collect().deep.toString)
 
     val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
 
@@ -138,8 +138,8 @@ object ImageNetApp {
         log("%.2f".format(accuracies(0)) + "% accuracy", i)
       }
 
-      val syncInterval = 50
       log("training", i)
+      val syncInterval = 50
       trainPartitionSizes.zipPartitions(trainMinibatchRDD) (
         (lenIt, trainMinibatchIt) => {
           assert(lenIt.hasNext && trainMinibatchIt.hasNext)
