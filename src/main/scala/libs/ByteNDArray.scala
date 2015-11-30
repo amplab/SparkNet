@@ -49,5 +49,16 @@ object ByteNDArray {
     new ByteNDArray(new JavaByteNDArray(data, shape:_*))
   }
 
+  def apply(data: Array[Float], shape: Array[Int]) = {
+    val size = data.length
+    val byteData = new Array[Byte](size)
+    var i = 0
+    while (i < size) {
+      byteData(i) = data(i).toByte
+      i += 1
+    }
+    new ByteNDArray(new JavaByteNDArray(byteData, shape:_*))
+  }
+
   def zeros(shape: Array[Int]) = new ByteNDArray(new JavaByteNDArray(new Array[Byte](shape.product), shape:_*))
 }
