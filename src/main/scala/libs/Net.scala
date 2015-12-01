@@ -9,11 +9,7 @@ import scala.collection.mutable.MutableList
 
 import caffe._
 import caffe.Caffe._
-
-import libs.CaffeLibrary
-import libs.NDArray
-import libs.ByteNDArray
-import libs.MinibatchSampler
+import libs._
 
 class WeightCollection(val allWeights: Map[String, MutableList[NDArray]], val layerNames: List[String]) extends java.io.Serializable {
   val numLayers = layerNames.length
