@@ -71,7 +71,7 @@ class CifarLoader(path: String) {
 
     while(nRead != -1) {
       assert(i < batchSize)
-      labels(perm(batch * batchSize + i)) = (buffer(0) & 0xff) // convert to unsigned
+      labels(perm(batch * batchSize + i)) = (buffer(0) & 0xFF) // convert to unsigned
       images(perm(batch * batchSize + i)) = new Array[Byte](size)
       var j = 0
       while (j < size) {

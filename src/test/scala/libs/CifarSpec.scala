@@ -29,7 +29,7 @@ class CifarSpec extends FlatSpec {
     val dtypeSize = caffeLib.get_dtype_size()
     val intSize = caffeLib.get_int_size()
 
-    def makeImageCallback(images: Array[Array[Float]]) : CaffeLibrary.java_callback_t = {
+    def makeImageCallback(images: Array[Array[Byte]]) : CaffeLibrary.java_callback_t = {
       return new CaffeLibrary.java_callback_t() {
         var currImage = 0
         def invoke(data: Pointer, batch_size: Int, num_dims: Int, shape: Pointer) {
@@ -41,7 +41,7 @@ class CifarSpec extends FlatSpec {
           for(j <- 0 to batch_size-1) {
             assert(size == images(currImage).length)
             for(i <- 0 to size-1) {
-              data.setFloat((j * size + i) * dtypeSize, images(currImage)(i))
+              data.setFloat((j * size + i) * dtypeSize, 1F * (images(currImage)(i) & 0xFF))
             }
             currImage += 1
             if(currImage == images.length) {
@@ -52,13 +52,13 @@ class CifarSpec extends FlatSpec {
       };
     }
 
-    def makeLabelCallback(labels: Array[Float]) : CaffeLibrary.java_callback_t =  {
+    def makeLabelCallback(labels: Array[Int]) : CaffeLibrary.java_callback_t =  {
       return new CaffeLibrary.java_callback_t() {
         var currImage = 0
         def invoke(data: Pointer, batch_size: Int, num_dims: Int, shape: Pointer) {
           for(j <- 0 to batch_size-1) {
             assert(shape.getInt(0) == 1)
-            data.setFloat(j * dtypeSize, labels(currImage))
+            data.setFloat(j * dtypeSize, 1F * labels(currImage))
             currImage += 1
             if(currImage == labels.length) {
               currImage = 0
