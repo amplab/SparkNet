@@ -5,6 +5,8 @@ import java.io.FileInputStream
 
 import scala.util.Random
 
+import libs._
+
 /**
  * Loads images from the CIFAR-10 Dataset. The string path points to a directory where the files data_batch_1.bin, etc. are stored.
  *
@@ -12,19 +14,19 @@ import scala.util.Random
  */
 class CifarLoader(path: String) {
   // We hardcode this because these are properties of the CIFAR-10 dataset.
-  val width = 32
   val height = 32
+  val width = 32
   val channels = 3
   val size = channels * height * width
   val batchSize = 10000
   val nBatches = 5
   val nData = nBatches * batchSize
 
-  val trainImages = new Array[Array[Float]](nData)
-  val trainLabels = new Array[Float](nData)
+  val trainImages = new Array[Array[Byte]](nData)
+  val trainLabels = new Array[Int](nData)
 
-  val testImages = new Array[Array[Float]](batchSize)
-  val testLabels = new Array[Float](batchSize)
+  val testImages = new Array[Array[Byte]](batchSize)
+  val testLabels = new Array[Int](batchSize)
 
   val r = new Random()
   // val perm = Vector() ++ r.shuffle(1 to (nData - 1) toIterable)
@@ -55,23 +57,12 @@ class CifarLoader(path: String) {
   val meanImage = new Array[Float](size)
 
   for (i <- 0 to nData - 1) {
-    for(j <- 0 to size - 1) {
-      meanImage(j) += trainImages(i)(j) / nData
+    for (j <- 0 to size - 1) {
+      meanImage(j) += trainImages(i)(j).toFloat / nData
     }
   }
 
-  subtractMean(trainImages)
-  subtractMean(testImages)
-
-  def subtractMean(images: Array[Array[Float]]) {
-    for(i <- 0 to images.length - 1) {
-      for(j <- 0 to size - 1) {
-        images(i)(j) -= meanImage(j)
-      }
-    }
-  }
-
-  def readBatch(file: File, batch: Int, images: Array[Array[Float]], labels: Array[Float], perm: Vector[Int]) {
+  def readBatch(file: File, batch: Int, images: Array[Array[Byte]], labels: Array[Int], perm: Vector[Int]) {
     val buffer = new Array[Byte](1 + size);
     val inputStream = new FileInputStream(file);
 
@@ -80,10 +71,13 @@ class CifarLoader(path: String) {
 
     while(nRead != -1) {
       assert(i < batchSize)
-      labels(perm(batch * batchSize + i)) = (buffer(0) & 0xff) * 1.0F // convert to unsigned
-      images(perm(batch * batchSize + i)) = new Array[Float](size)
-      for(j <- 1 to size) {
-        images(perm(batch * batchSize + i))(j - 1) = (buffer(j) & 0xff) * 1.0F // convert to unsigned
+      labels(perm(batch * batchSize + i)) = (buffer(0) & 0xff) // convert to unsigned
+      images(perm(batch * batchSize + i)) = new Array[Byte](size)
+      var j = 0
+      while (j < size) {
+        // we access buffer(j + 1) because the 0th position holds the label
+        images(perm(batch * batchSize + i))(j) = buffer(j + 1)
+        j += 1
       }
       nRead = inputStream.read(buffer)
       i += 1

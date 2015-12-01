@@ -53,9 +53,9 @@ object CifarApp {
 
     val loader = new CifarLoader(sparkNetHome + "/caffe/data/cifar10/")
     log("loading train data")
-    var trainRDD = sc.parallelize(loader.trainImages.zip(loader.trainLabels.map(x => x.toInt)))
+    var trainRDD = sc.parallelize(loader.trainImages.zip(loader.trainLabels))
     log("loading test data")
-    var testRDD = sc.parallelize(loader.testImages.zip(loader.testLabels.map(x => x.toInt)))
+    var testRDD = sc.parallelize(loader.testImages.zip(loader.testLabels))
 
     log("repartition data")
     trainRDD = trainRDD.repartition(numWorkers)

@@ -67,13 +67,13 @@ object ImageNetApp {
 
     log("processing train data")
     val trainConverter = new ScaleAndConvert(trainBatchSize, fullHeight, fullWidth)
-    var trainMinibatchRDD = trainConverter.apply(trainRDD).persist()
+    var trainMinibatchRDD = trainConverter.makeMinibatchRDD(trainRDD).persist()
     val numTrainMinibatches = trainMinibatchRDD.count()
     log("numTrainMinibatches = " + numTrainMinibatches.toString)
 
     log("processing test data")
     val testConverter = new ScaleAndConvert(testBatchSize, fullHeight, fullWidth)
-    var testMinibatchRDD = testConverter.apply(testRDD).persist()
+    var testMinibatchRDD = testConverter.makeMinibatchRDD(testRDD).persist()
     val numTestMinibatches = testMinibatchRDD.count()
     log("numTestMinibatches = " + numTestMinibatches.toString)
 
@@ -113,19 +113,21 @@ object ImageNetApp {
             // imageNetTestPreprocessing describes the preprocessing that is
             // done to each image before it is passed to Caffe during testing.
             // We subtract the mean image and take the central 227x227 subimage.
-            val testPreprocessingBuffer = new Array[Float](fullImSize)
             val meanImageBuff = broadcastMeanImageBuffer.value
-            val imageNetTestPreprocessing = (im: ByteNDArray) => {
-              im.copyBufferToFloatArray(testPreprocessingBuffer)
-              var i = 0
-              while (i < fullImSize) {
-                testPreprocessingBuffer(i) -= meanImageBuff(i)
-                i += 1
-              }
-              val widthOffset = 15
+            val imageNetTestPreprocessing = (im: ByteImage, buffer: Array[Float]) => {
               val heightOffset = 15
-              val centeredImage = NDArray(testPreprocessingBuffer, fullImShape)
-              centeredImage.subarray(Array[Int](0, widthOffset, heightOffset), Array[Int](channels, widthOffset + croppedWidth, heightOffset + croppedHeight))
+              val widthOffset = 15
+              im.cropInto(buffer, Array(heightOffset, widthOffset), Array(heightOffset + croppedHeight, widthOffset + croppedWidth))
+              var row = 0
+              var col = 0
+              while (row < croppedHeight) {
+                while (col < croppedWidth) {
+                  val index = (row + heightOffset) * fullWidth + (col + widthOffset)
+                  buffer(index) -= meanImageBuff(index)
+                  col += 1
+                }
+                row += 1
+              }
             }
             val minibatchSampler = new MinibatchSampler(testMinibatchIt, len, len)
             net.setTestData(minibatchSampler, len, Some(imageNetTestPreprocessing))
@@ -150,17 +152,20 @@ object ImageNetApp {
           // subtract the mean image and take a random 227x227 subimage.
           val trainPreprocessingBuffer = new Array[Float](fullImSize)
           val meanImageBuff = broadcastMeanImageBuffer.value
-          val imageNetTrainPreprocessing = (im: ByteNDArray) => {
-            im.copyBufferToFloatArray(trainPreprocessingBuffer)
-            var i = 0
-            while (i < fullImSize) {
-              trainPreprocessingBuffer(i) -= meanImageBuff(i)
-              i += 1
-            }
-            val widthOffset = Random.nextInt(fullWidth - croppedWidth)
+          val imageNetTrainPreprocessing = (im: ByteImage, buffer: Array[Float]) => {
             val heightOffset = Random.nextInt(fullHeight - croppedHeight)
-            val centeredImage = NDArray(trainPreprocessingBuffer, fullImShape)
-            centeredImage.subarray(Array[Int](0, widthOffset, heightOffset), Array[Int](channels, widthOffset + croppedWidth, heightOffset + croppedHeight))
+            val widthOffset = Random.nextInt(fullWidth - croppedWidth)
+            im.cropInto(buffer, Array(heightOffset, widthOffset), Array(heightOffset + croppedHeight, widthOffset + croppedWidth))
+            var row = 0
+            var col = 0
+            while (row < croppedHeight) {
+              while (col < croppedWidth) {
+                val index = (row + heightOffset) * fullWidth + (col + widthOffset)
+                buffer(index) -= meanImageBuff(index)
+                col += 1
+              }
+              row += 1
+            }
           }
           val minibatchSampler = new MinibatchSampler(trainMinibatchIt, len, syncInterval)
           net.setTrainData(minibatchSampler, Some(imageNetTrainPreprocessing))

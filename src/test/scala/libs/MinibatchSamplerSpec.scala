@@ -1,11 +1,10 @@
 import org.scalatest._
-import libs.MinibatchSampler
-import libs.ByteNDArray
+import libs._
 
 class MinibatchSamplerSpec extends FlatSpec {
   val minibatches = Array.range(0, 100).map(
     i => {
-      (Array(ByteNDArray(Array(i.toByte), Array(1))), Array(i))
+      (Array(new ByteImage(Array(i.toByte, i.toByte, i.toByte), 1, 1)), Array(i))
     }
   )
 
@@ -13,7 +12,7 @@ class MinibatchSamplerSpec extends FlatSpec {
   for (i <- 0 to 4) {
     var imageMinibatch = sampler.nextImageMinibatch()
     var labelMinibatch = sampler.nextLabelMinibatch()
-    assert(imageMinibatch(0).get(Array(0)) == 1F * sampler.indices(i))
+    assert(imageMinibatch(0).red(0) == sampler.indices(i).toByte)
     assert(labelMinibatch(0) == sampler.indices(i))
   }
 
@@ -21,7 +20,7 @@ class MinibatchSamplerSpec extends FlatSpec {
   for (i <- 0 to 9) {
     var labelMinibatch = sampler.nextLabelMinibatch()
     var imageMinibatch = sampler.nextImageMinibatch()
-    assert(imageMinibatch(0).get(Array(0)) == 1F * sampler.indices(i))
+    assert(imageMinibatch(0).red(0) == sampler.indices(i).toByte)
     assert(labelMinibatch(0) == sampler.indices(i))
   }
 
@@ -39,7 +38,7 @@ class MinibatchSamplerSpec extends FlatSpec {
         (tempImageMinibatch, tempLabelMinibatch)
       }
     }
-    assert(imageMinibatch(0).get(Array(0)) == 1F * sampler.indices(i))
+    assert(imageMinibatch(0).red(0) == sampler.indices(i).toByte)
     assert(labelMinibatch(0) == sampler.indices(i))
   }
 }
