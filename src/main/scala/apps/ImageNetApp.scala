@@ -175,7 +175,7 @@ object ImageNetApp {
       ).foreachPartition(_ => ())
 
       log("collecting weights", i)
-      netWeights = workers.map(_ => net.getWeights()).reduce((a, b) => WeightCollection.add(a, b))
+      netWeights = workers.map(_ => net.getWeights()).treeReduce((a, b) => WeightCollection.add(a, b))
       netWeights.scalarDivide(1F * numWorkers)
 
       i += 1
