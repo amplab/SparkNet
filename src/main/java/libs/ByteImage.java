@@ -1,14 +1,35 @@
 // this only works for a 2D image, but a similar class can be written for ND tensors
+package libs;
 
 import java.awt.image.BufferedImage;
 
-class ByteImage {
-  byte[] red;
-  byte[] green;
-  byte[] blue;
+public class ByteImage {
+  private byte[] red;
+  private byte[] green;
+  private byte[] blue;
 
-  final int width;
-  final int height;
+  private final int height;
+  private final int width;
+
+  public byte getRed(int row, int col) {
+    return red[row * width + col];
+  }
+
+  public byte getGreen(int row, int col) {
+    return green[row * width + col];
+  }
+
+  public byte getBlue(int row, int col) {
+    return blue[row * width + col];
+  }
+
+  public int getHeight() {
+    return height;
+  }
+
+  public int getWidth() {
+    return width;
+  }
 
   // create a byte image from a BufferedImage
   public ByteImage(BufferedImage image) {
@@ -30,8 +51,22 @@ class ByteImage {
     }
   }
 
+  public ByteImage(byte[] image, int height, int width) {
+    assert(image.length == 3 * width * height);
+    this.height = height;
+    this.width = width;
+    red = new byte[width * height];
+    green = new byte[width * height];
+    blue = new byte[width * height];
+    for (int i = 0; i < width * height; i++) {
+      red[i] = image[i];
+      green[i] = image[i + width * height];
+      blue[i] = image[i + 2 * width * height];
+    }
+  }
+
   // create an "empty" byte image
-  public ByteImage(int width, int height) {
+  public ByteImage(int height, int width) {
     this.width = width;
     this.height = height;
     red = new byte[width * height];
@@ -39,7 +74,7 @@ class ByteImage {
     blue = new byte[width * height];
   }
 
-  void cropInto(float[] buffer, int[] lowerOffsets, int[] upperOffsets) {
+  public void cropInto(float[] buffer, int[] lowerOffsets, int[] upperOffsets) {
     assert(0 <= lowerOffsets[0] && lowerOffsets[0] < upperOffsets[0] && upperOffsets[0] <= height);
     assert(0 <= lowerOffsets[1] && lowerOffsets[1] < upperOffsets[1] && upperOffsets[1] <= width);
 
@@ -47,6 +82,8 @@ class ByteImage {
     final int w = upperOffsets[1] - lowerOffsets[1];
     final int lr = lowerOffsets[0];
     final int lc = lowerOffsets[1];
+
+    assert(buffer.length == h * w);
 
     for(int row = 0; row < w; row++) {
       for(int col = 0; col < h; col++) {

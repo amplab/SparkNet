@@ -9,11 +9,7 @@ import scala.collection.mutable.MutableList
 
 import caffe._
 import caffe.Caffe._
-
-import libs.CaffeLibrary
-import libs.NDArray
-import libs.ByteNDArray
-import libs.MinibatchSampler
+import libs._
 
 class WeightCollection(val allWeights: Map[String, MutableList[NDArray]], val layerNames: List[String]) extends java.io.Serializable {
   val numLayers = layerNames.length
@@ -51,9 +47,9 @@ object WeightCollection extends java.io.Serializable {
 }
 
 trait Net {
-  def setTrainData(minibatchSampler: MinibatchSampler, trainPreprocessing: Option[ByteNDArray => NDArray] = None)
+  def setTrainData(minibatchSampler: MinibatchSampler, trainPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None)
 
-  def setTestData(minibatchSampler: MinibatchSampler, len: Int, testPreprocessing: Option[ByteNDArray => NDArray] = None)
+  def setTestData(minibatchSampler: MinibatchSampler, len: Int, testPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None)
 
   def train(numSteps: Int)
 
@@ -80,14 +76,14 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
 
   var numTestBatches = None: Option[Int]
 
-  def setTrainData(minibatchSampler: MinibatchSampler, trainPreprocessing: Option[ByteNDArray => NDArray] = None) = {
+  def setTrainData(minibatchSampler: MinibatchSampler, trainPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None) = {
     imageTrainCallback = Some(makeImageCallback(minibatchSampler, trainPreprocessing))
     labelTrainCallback = Some(makeLabelCallback(minibatchSampler))
     library.set_train_data_callback(state, 0, imageTrainCallback.get)
     library.set_train_data_callback(state, 1, labelTrainCallback.get)
   }
 
-  def setTestData(minibatchSampler: MinibatchSampler, len: Int, testPreprocessing: Option[ByteNDArray => NDArray] = None) = {
+  def setTestData(minibatchSampler: MinibatchSampler, len: Int, testPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None) = {
     numTestBatches = Some(len)
     imageTestCallback = Some(makeImageCallback(minibatchSampler, testPreprocessing))
     labelTestCallback = Some(makeLabelCallback(minibatchSampler))
@@ -155,36 +151,30 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
     return new WeightCollection(allWeights, layerNames)
   }
 
-  private def makeImageCallback(minibatchSampler: MinibatchSampler, preprocessing: Option[ByteNDArray => NDArray] = None): CaffeLibrary.java_callback_t = {
+  private def makeImageCallback(minibatchSampler: MinibatchSampler, preprocessing: Option[(ByteImage, Array[Float]) => Unit] = None): CaffeLibrary.java_callback_t = {
     return new CaffeLibrary.java_callback_t() {
       def invoke(data: Pointer, batchSize: Int, numDims: Int, shape: Pointer) {
         val currentImageBatch = minibatchSampler.nextImageMinibatch()
         assert(currentImageBatch.length == batchSize)
-
-        // figure out what shape images Caffe expects
-        val arrayShape = new Array[Int](numDims)
+        val arrayShape = new Array[Int](numDims) // figure out what shape images Caffe expects
         for (i <- 0 to numDims - 1) {
           val dim = shape.getInt(i * intSize)
           arrayShape(i) = dim
         }
+        val size = arrayShape.product
+        val buffer = new Array[Float](size)
 
         for (j <- 0 to batchSize - 1) {
           val currentImage = currentImageBatch(j)
           val processedImage = {
             if (preprocessing.isEmpty) {
-              currentImage.toFloatNDArray() // didn't test this code path
+              // copy the image into a float buffer, ignoring the numChannels component
+              currentImage.cropInto(buffer, new Array[Int](numDims - 1), arrayShape.slice(1, numDims))
             } else {
-              preprocessing.get(currentImage)
+              preprocessing.get(currentImage, buffer)
             }
           }
-          assert(arrayShape.deep == processedImage.shape.deep) // check that the image shape matches the shape Caffe expects
-          val flatImage = processedImage.toFlat() // this allocation could be avoided
-          val flatSize = flatImage.length
-          var i = 0
-          while (i < flatSize) {
-            data.setFloat((j * flatSize + i) * dtypeSize, flatImage(i))
-            i += 1
-          }
+          data.write(j * size * dtypeSize, buffer, 0, size)
         }
       }
     }
