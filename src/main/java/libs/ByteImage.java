@@ -4,12 +4,32 @@ package libs;
 import java.awt.image.BufferedImage;
 
 public class ByteImage {
-  public byte[] red;
-  public byte[] green;
-  public byte[] blue;
+  private byte[] red;
+  private byte[] green;
+  private byte[] blue;
 
-  public final int height;
-  public final int width;
+  private final int height;
+  private final int width;
+
+  public byte getRed(int row, int col) {
+    return red[row * width + col];
+  }
+
+  public byte getGreen(int row, int col) {
+    return green[row * width + col];
+  }
+
+  public byte getBlue(int row, int col) {
+    return blue[row * width + col];
+  }
+
+  public int getHeight() {
+    return height;
+  }
+
+  public int getWidth() {
+    return width;
+  }
 
   // create a byte image from a BufferedImage
   public ByteImage(BufferedImage image) {

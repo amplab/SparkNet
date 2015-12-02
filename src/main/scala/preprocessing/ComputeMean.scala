@@ -16,16 +16,19 @@ object ComputeMean {
         while (i < batchSize) {
           val currentImage = currentImageMinibatch(i)
           var j = 0
-          val imSize = currentImage.height * currentImage.width
-          assert(shape.length == 3 && shape(0) == 3 && shape(1) == currentImage.height && shape(2) == currentImage.width)
-          while (j < imSize) {
-            // scala Bytes are signed, so we and with 0xFF to get the unsigned
-            // value (as an Int) and then add to runningImageSum, which casts it
-            // to a Long
-            runningImageSum(0 * imSize + j) += (currentImage.red(j) & 0xFF)
-            runningImageSum(1 * imSize + j) += (currentImage.green(j) & 0xFF)
-            runningImageSum(2 * imSize + j) += (currentImage.blue(j) & 0xFF)
-            j += 1
+          val height = currentImage.getHeight()
+          val width = currentImage.getWidth()
+          assert(shape.length == 3 && shape(0) == 3 && shape(1) == currentImage.getHeight() && shape(2) == currentImage.getWidth())
+          var row = 0
+          var col = 0
+          while (row < height) {
+            while (col < width) {
+              runningImageSum(0 * height * width + row * width + col) += (currentImage.getRed(row, col) & 0xFF)
+              runningImageSum(1 * height * width + row * width + col) += (currentImage.getGreen(row, col) & 0xFF)
+              runningImageSum(2 * height * width + row * width + col) += (currentImage.getBlue(row, col) & 0xFF)
+              col += 1
+            }
+            row += 1
           }
           i += 1
         }

@@ -12,7 +12,7 @@ class MinibatchSamplerSpec extends FlatSpec {
   for (i <- 0 to 4) {
     var imageMinibatch = sampler.nextImageMinibatch()
     var labelMinibatch = sampler.nextLabelMinibatch()
-    assert(imageMinibatch(0).red(0) == sampler.indices(i).toByte)
+    assert(imageMinibatch(0).getRed(0, 0) == sampler.indices(i).toByte)
     assert(labelMinibatch(0) == sampler.indices(i))
   }
 
@@ -20,7 +20,7 @@ class MinibatchSamplerSpec extends FlatSpec {
   for (i <- 0 to 9) {
     var labelMinibatch = sampler.nextLabelMinibatch()
     var imageMinibatch = sampler.nextImageMinibatch()
-    assert(imageMinibatch(0).red(0) == sampler.indices(i).toByte)
+    assert(imageMinibatch(0).getRed(0, 0) == sampler.indices(i).toByte)
     assert(labelMinibatch(0) == sampler.indices(i))
   }
 
@@ -38,7 +38,7 @@ class MinibatchSamplerSpec extends FlatSpec {
         (tempImageMinibatch, tempLabelMinibatch)
       }
     }
-    assert(imageMinibatch(0).red(0) == sampler.indices(i).toByte)
+    assert(imageMinibatch(0).getRed(0, 0) == sampler.indices(i).toByte)
     assert(labelMinibatch(0) == sampler.indices(i))
   }
 }
