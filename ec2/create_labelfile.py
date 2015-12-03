@@ -12,12 +12,12 @@ labelmap = dict()
 
 trainfile = open(args.trainfile, 'r')
 for line in trainfile.readlines():
-	(fname, label) = line.split()
-	labelmap[fname.upper()] = label # poor man's file name normalization
+    (fname, label) = line.split()
+    labelmap[fname.upper()] = label # poor man's file name normalization
 trainfile.close()
 
 outfile = open(args.outfile, 'w')
 for root, dirs, files in os.walk(args.directory):
-	for f in files:
-		outfile.write(f + " " + labelmap[f.upper()] + "\n")
+    for f in files:
+        outfile.write(f + " " + labelmap[f.upper()] + "\n")
 outfile.close()

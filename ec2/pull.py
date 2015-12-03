@@ -20,25 +20,25 @@ parser.add_argument("directory", help="directory where JPEGs will be stored", ty
 args = parser.parse_args()
 
 def download_files(directory, tar_path):
-	response = s3.get_object(Bucket='sparknet', Key=tar_path)
+    response = s3.get_object(Bucket='sparknet', Key=tar_path)
 
-	output = io.BytesIO()
+    output = io.BytesIO()
 
-	chunk = response['Body'].read(1024 * 8)
-	while chunk:
-		output.write(chunk)
-		chunk = response['Body'].read(1024 * 8)
+    chunk = response['Body'].read(1024 * 8)
+    while chunk:
+        output.write(chunk)
+        chunk = response['Body'].read(1024 * 8)
 
-	output.seek(0) # go to the beginning of the .tar file
+    output.seek(0) # go to the beginning of the .tar file
 
-	tar = tarfile.open(mode= "r", fileobj=output)
+    tar = tarfile.open(mode= "r", fileobj=output)
 
-	for member in tar.getmembers():
-		filename = member.path # in a format like 'n02099601_3085.JPEG'
-		content = tar.extractfile(member)
-		out = open(os.path.join(directory, filename), 'w')
-		out.write(content.read())
-		out.close()
+    for member in tar.getmembers():
+        filename = member.path # in a format like 'n02099601_3085.JPEG'
+        content = tar.extractfile(member)
+        out = open(os.path.join(directory, filename), 'w')
+        out.write(content.read())
+        out.close()
 
 
 directory = os.path.join(args.directory, '%03d-%03d' % (args.start_idx, args.stop_idx))
@@ -46,4 +46,4 @@ if not os.path.exists(directory):
     os.makedirs(directory)
 
 for idx in range(args.start_idx, args.stop_idx):
-	download_files(directory, 'ILSVRC2012_train/files-shuf-%03d.tar' % idx)
+    download_files(directory, 'ILSVRC2012_train/files-shuf-%03d.tar' % idx)
