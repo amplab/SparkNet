@@ -11,8 +11,8 @@ import libs._
 import loaders._
 import preprocessing._
 
-// to run this app, the ImageNet training and validation data must be located on
-// S3 at s3://sparknet/ILSVRC2012_training/ and s3://sparknet/ILSVRC2012_val/.
+// to run this app, the ImageNet training and test data must be located on S3 at
+// s3://sparknet/ILSVRC2012_train/ and s3://sparknet/ILSVRC2012_test/.
 // Performance is best if the uncompressed data can fit in memory. If it cannot
 // fit, you can replace persist() with persist(StorageLevel.MEMORY_AND_DISK).
 // However, spilling the RDDs to disk can cause training to be much slower.
@@ -61,9 +61,9 @@ object ImageNetApp {
 
     val loader = new ImageNetLoader("sparknet")
     log("loading train data")
-    var trainRDD = loader.apply(sc, "ILSVRC2012_training/", "train.txt")
+    var trainRDD = loader.apply(sc, "ILSVRC2012_train/", "train.txt")
     log("loading test data")
-    val testRDD = loader.apply(sc, "ILSVRC2012_val/", "val.txt")
+    val testRDD = loader.apply(sc, "ILSVRC2012_test/", "test.txt")
 
     log("processing train data")
     val trainConverter = new ScaleAndConvert(trainBatchSize, fullHeight, fullWidth)
