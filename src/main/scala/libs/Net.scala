@@ -213,6 +213,7 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
 object CaffeNet {
   def apply(solverParameter: SolverParameter, numGPUs: Int = 1): CaffeNet = {
     val caffeLib = CaffeLibrary.INSTANCE
+    caffeLib.init_logging("/tmp/scalacaffe", 3)
     val state = caffeLib.create_state()
     val byteArr = solverParameter.toByteArray()
     val ptr = new Memory(byteArr.length)
