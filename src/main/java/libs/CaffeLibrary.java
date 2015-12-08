@@ -23,7 +23,7 @@ public interface CaffeLibrary extends Library {
   void destroy_state(Pointer state);
 
   void load_net_from_protobuf(Pointer state, Pointer net_param, int net_param_len);
-  void load_solver_from_protobuf(Pointer state, Pointer solver_param, int solver_param_len);
+  void load_solver_from_protobuf(Pointer state, Pointer solver_param, int solver_param_len, int num_gpus);
 
   int set_train_data_callback(Pointer state, int layer_idx, java_callback_t callback);
   int set_test_data_callback(Pointer state, int layer_idx, java_callback_t callback);
@@ -57,6 +57,7 @@ public interface CaffeLibrary extends Library {
   void set_device(int gpu_id);
 
   void load_weights_from_file(Pointer state, String filename);
+  void save_weights_to_file(Pointer state, String filename);
   void restore_solver_from_file(Pointer state, String filename);
 
   boolean parse_net_prototxt(Pointer state, String filename);

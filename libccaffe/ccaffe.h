@@ -20,7 +20,7 @@ extern "C" {
   caffenet_state* create_state();
   void destroy_state(caffenet_state* state);
 
-  void load_solver_from_protobuf(caffenet_state* state, const char* solver_param, int solver_param_len);
+  void load_solver_from_protobuf(caffenet_state* state, const char* solver_param, int solver_param_len, int num_gpus);
   void load_net_from_protobuf(caffenet_state* state, const char* net_param, int net_param_len);
 
   // TODO: Write documentation for these methods (in particular the layer index)
@@ -59,6 +59,7 @@ extern "C" {
   void set_device(int gpu_id);
 
   void load_weights_from_file(caffenet_state* state, const char* filename);
+  void save_weights_to_file(caffenet_state* state, const char* filename);
   void restore_solver_from_file(caffenet_state* state, const char* filename);
 
   bool parse_net_prototxt(caffenet_state* state, const char* filename);

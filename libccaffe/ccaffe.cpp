@@ -9,6 +9,7 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 #include <unistd.h>
+#include "caffe/parallel.hpp"
 
 #include <glog/logging.h>
 
@@ -17,13 +18,21 @@
 using boost::shared_ptr;
 using google::protobuf::Message;
 
+// a caffenet_state supports working with either (a) a single network
+// (state->net), (b) a testing and a training network coupled by a solver
+// (state->solver, state->net, state->testnet) or (c) a solver that supports
+// mutiple GPUs on one machine (state->sync, state->solver, state->net,
+// state->testnet)
+
 struct caffenet_state {
   caffe::Net<DTYPE> *net; // holds a net, can be used independently of solver and testnet
-  caffe::Solver<DTYPE> *solver; // holds a solver
+  shared_ptr<caffe::Solver<DTYPE> > solver; // holds a solver
+  caffe::P2PSync<DTYPE>* sync; // GPU manager needed for multi GPUs
   caffe::Net<DTYPE> *testnet; // reference to the the first (and only) testnet of the solver
   std::vector<DTYPE> *test_score; // scratch space to store test scores
   Message* proto; // scratch space to store protobuf message
   std::vector<char>* buffer; // scratch space to pass serialized protobuf to client
+  std::vector<shared_ptr<caffe::P2PSync<DTYPE> > > syncs; // vector of GPU managers, needed for multi GPU
 };
 
 void init_logging(const char* log_filename, int log_verbosity) {
@@ -48,7 +57,8 @@ caffenet_state* create_state() {
   caffenet_state *state = new caffenet_state();
   state->net = NULL;
   state->testnet = NULL;
-  state->solver = NULL;
+  state->solver = shared_ptr<caffe::Solver<DTYPE> >();
+  state->sync = NULL;
   state->test_score = new std::vector<DTYPE>();
   state->proto = NULL;
   state->buffer = new std::vector<char>();
@@ -56,9 +66,7 @@ caffenet_state* create_state() {
 }
 
 void destroy_state(caffenet_state* state) {
-  if (state->solver != NULL) {
-    delete state->solver;
-  } else if (state->net != NULL) {
+  if (state->net != NULL && !state->solver) {
     delete state->net;
   }
   if (state->proto != NULL) {
@@ -69,12 +77,34 @@ void destroy_state(caffenet_state* state) {
   delete state;
 }
 
-void load_solver_from_protobuf(caffenet_state* state, const char* solver_param, int solver_param_len) {
+void load_solver_from_protobuf(caffenet_state* state, const char* solver_param, int solver_param_len, int num_gpus) {
   caffe::SolverParameter param;
   param.ParseFromString(std::string(solver_param, solver_param_len));
-  state->solver = new caffe::SGDSolver<DTYPE>(param);
+
+  std::vector<int> gpus;
+  for (int i = 0; i < num_gpus; i++) {
+    gpus.push_back(i);
+  }
+
+  if (num_gpus > 1) {
+    param.set_device_id(gpus[0]);
+    caffe::Caffe::SetDevice(gpus[0]);
+    caffe::Caffe::set_mode(caffe::Caffe::GPU);
+    caffe::Caffe::set_solver_count(gpus.size());
+  }
+
+  state->solver = shared_ptr<caffe::Solver<DTYPE> >(caffe::SolverRegistry<DTYPE>::CreateSolver(param));
+
   state->net = state->solver->net().get();
-  state->testnet = state->solver->test_nets()[0].get();
+
+  if(param.test_iter_size() > 0) {
+    state->testnet = state->solver->test_nets()[0].get();
+  }
+
+  if (num_gpus > 1) {
+    state->sync = new caffe::P2PSync<DTYPE>(state->solver, NULL, state->solver->param());
+    state->syncs = state->sync->initialize(gpus);
+  }
 }
 
 void load_net_from_protobuf(caffenet_state* state, const char* net_param, int net_param_len) {
@@ -172,10 +202,16 @@ void backward(caffenet_state* state) {
 }
 
 int solver_step(caffenet_state* state, int step) {
-  state->solver->Step(step);
+  CHECK(caffe::Caffe::root_solver());
+  if (state->sync == NULL) {
+    state->solver->Step(step);
+  } else {
+    state->sync->step(state->syncs, step);
+  }
   return 0; // success
 }
 
+// TODO: Make sure that there is an error message if test is called without testnet
 void solver_test(caffenet_state* state, int num_steps) {
   state->test_score->clear();
   state->solver->TestAndStoreResult(0, num_steps, state->test_score);
@@ -204,6 +240,12 @@ void set_device(int gpu_id) {
 
 void load_weights_from_file(caffenet_state* state, const char* filename) {
   state->net->CopyTrainedLayersFrom(filename);
+}
+
+void save_weights_to_file(caffenet_state* state, const char* filename) {
+  caffe::NetParameter net_param;
+  state->net->ToProto(&net_param, state->solver->param().snapshot_diff());
+  WriteProtoToBinaryFile(net_param, filename);
 }
 
 void restore_solver_from_file(caffenet_state* state, const char* filename) {

@@ -380,7 +380,7 @@ void P2PSync<Dtype>::on_gradients_ready() {
 }
 
 template<typename Dtype>
-void P2PSync<Dtype>::run(const vector<int>& gpus) {
+vector<shared_ptr<P2PSync<Dtype> > > P2PSync<Dtype>::initialize(const vector<int>& gpus) {
   // Pair devices for map-reduce synchronization
   vector<DevicePair> pairs;
   DevicePair::compute(gpus, &pairs);
@@ -418,13 +418,16 @@ void P2PSync<Dtype>::run(const vector<int>& gpus) {
 
   LOG(INFO)<< "Starting Optimization";
 
+  return syncs;
+}
+
+template<typename Dtype>
+void P2PSync<Dtype>::step(vector<shared_ptr<P2PSync<Dtype> > > syncs, int num_steps) {
   for (int i = 1; i < syncs.size(); ++i) {
     syncs[i]->StartInternalThread();
   }
-
   // Run root solver on current thread
-  solver_->Solve();
-
+  solver_->Step(num_steps);
   for (int i = 1; i < syncs.size(); ++i) {
     syncs[i]->StopInternalThread();
   }
