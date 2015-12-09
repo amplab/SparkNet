@@ -14,7 +14,7 @@ layer {
   data_param {
     source: "/imgnet/traindb"
     batch_size: 32
-    backend: LMDB
+    backend: LEVELDB
   }
 }
 layer {
