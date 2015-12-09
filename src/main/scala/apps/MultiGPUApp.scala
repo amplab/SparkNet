@@ -32,6 +32,7 @@ object MultiGPUApp {
 
     val caffeLib = CaffeLibrary.INSTANCE
     val state = net.getState()
+    caffeLib.load_weights_from_file(state, "/imgnet/params/000010000.caffemodel")
 
     var i = 0
     while (true) {
