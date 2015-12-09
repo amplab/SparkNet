@@ -93,7 +93,11 @@ void load_solver_from_protobuf(caffenet_state* state, const char* solver_param, 
     caffe::Caffe::set_solver_count(gpus.size());
   }
 
-  state->solver = shared_ptr<caffe::Solver<DTYPE> >(caffe::SolverRegistry<DTYPE>::CreateSolver(param));
+  if (num_gpus > 1) {
+    state->solver = shared_ptr<caffe::Solver<DTYPE> >(caffe::SolverRegistry<DTYPE>::CreateSolver(param));
+  } else {
+    state->solver = shared_ptr<caffe::Solver<DTYPE> >(new caffe::SGDSolver<DTYPE>(param));
+  }
 
   state->net = state->solver->net().get();
 
