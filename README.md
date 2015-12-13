@@ -6,9 +6,30 @@ Details are available in the [paper](http://arxiv.org/abs/1511.06051).
 To run SparkNet, you will need a [Spark](http://spark.apache.org) cluster.
 SparkNet apps can be run using [spark-submit](http://spark.apache.org/docs/latest/submitting-applications.html).
 
+### Quick Start
+**Start a Spark cluster using our AMI**
+
+1. Create an AWS secret key and access key. Instructions [here](http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html).
+2. Run `export AWS_SECRET_ACCESS_KEY=` and `export AWS_ACCESS_KEY_ID=` with the relevant values.
+3. Clone our repository locally.
+4. Start a 5-worker Spark cluster on EC2 by running
+
+        SparkNet/ec2/spark-ec2 --key-pair=key --identity-file=key.rsa --region=eu-west-1 --zone=eu-west-1c --instance-type=g2.8xlarge --ami=ami-c0dd7db3 -s 5 --copy-aws-credentials --spark-version 1.5.0 --spot-price 1.5 --no-ganglia --user-data SparkNet/ec2/cloud-config.txt launch sparknet
+assuming `key.rsa` is your key pair.
+
+**Train Cifar using SparkNet**
+
+1. SSH to the Spark master as `root`.
+2. Run `/root/SparkNet/caffe/data/cifar10/get_cifar10.sh` to get the Cifar data
+3. Train Cifar on 5 workers using
+
+        /root/spark/bin/spark-submit --class apps.CifarApp /root/SparkNet/target/scala-2.10/sparknet-assembly-0.1-SNAPSHOT.jar 5
+4. That's all! Information is logged on the master in `/root/training_log*.txt`.
+
+
 ### Dependencies
 For now, you have to install the following.
-However, we intend to release an AMI with these dependencies already installed.
+We have an AMI with these dependencies already installed (ami-c0dd7db3).
 Dependencies:
 
 1. sbt 0.13 - [installation instructions](http://www.scala-sbt.org/0.13/tutorial/Installing-sbt-on-Linux.html)
