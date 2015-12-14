@@ -74,7 +74,9 @@ void load_solver_from_protobuf(caffenet_state* state, const char* solver_param, 
   param.ParseFromString(std::string(solver_param, solver_param_len));
   state->solver = new caffe::SGDSolver<DTYPE>(param);
   state->net = state->solver->net().get();
-  state->testnet = state->solver->test_nets()[0].get();
+  if(param.test_iter_size() > 0) {
+    state->testnet = state->solver->test_nets()[0].get();
+  }
 }
 
 void load_net_from_protobuf(caffenet_state* state, const char* net_param, int net_param_len) {
