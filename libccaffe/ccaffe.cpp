@@ -206,6 +206,12 @@ void load_weights_from_file(caffenet_state* state, const char* filename) {
   state->net->CopyTrainedLayersFrom(filename);
 }
 
+void save_weights_to_file(caffenet_state* state, const char* filename) {
+  caffe::NetParameter net_param;
+  state->net->ToProto(&net_param, state->solver->param().snapshot_diff());
+  WriteProtoToBinaryFile(net_param, filename);
+}
+
 void restore_solver_from_file(caffenet_state* state, const char* filename) {
   state->solver->Restore(filename);
 }

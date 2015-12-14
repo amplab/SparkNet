@@ -16,8 +16,8 @@ object MultiGPUApp {
 	caffeLib.set_basepath(sparkNetHome + "/caffe/")
   var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_googlenet/train_val.prototxt")
   val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_googlenet/quick_solver.prototxt", netParameter, None)
-  val net = CaffeNet(solverParameter, 1) // TODO: Fix 1 not working here
-
+  val net = CaffeNet(solverParameter)
+  
   def main(args: Array[String]) {
     val numWorkers = args(0).toInt
     val conf = new SparkConf()
