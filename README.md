@@ -84,11 +84,11 @@ To run CifarApp, do the following:
 To run ImageNet, do the following:
 
 1.  Obtain the ImageNet data by following the instructions [here](http://www.image-net.org/download-images). This involves creating an account and submitting a request.
-2. Put the training tar files on S3 at `s3://sparknet/ILSVRC2012_training`
-3. Tar the validation files by running
+2. Put the training tar files on S3 at `s3://sparknet/ILSVRC2012_train`
+3. Tar the test images by running
 
         TODO
-and put them on S3 at `s3://sparknet/ILSVRC2012_val`
+and put them on S3 at `s3://sparknet/ILSVRC2012_test`
 4. Set the correct value of `sparkNetHome` in `src/main/scala/apps/ImageNetApp.scala`.
 5. Submit a job on the master with
 
