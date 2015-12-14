@@ -20,13 +20,7 @@ object CifarApp {
   val imShape = Array(channels, height, width)
   val size = imShape.product
 
-  // initialize nets on workers
-  val sparkNetHome = "/root/SparkNet"
-  System.load(sparkNetHome + "/build/libccaffe.so")
-  var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/examples/cifar10/cifar10_full_train_test.prototxt")
-  netParameter = ProtoLoader.replaceDataLayers(netParameter, trainBatchSize, testBatchSize, channels, height, width)
-  val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/examples/cifar10/cifar10_full_solver.prototxt", netParameter, None)
-  val net = CaffeNet(solverParameter)
+  val workerStore = new WorkerStore()
 
   def main(args: Array[String]) {
     val numWorkers = args(0).toInt
@@ -35,6 +29,8 @@ object CifarApp {
       .set("spark.driver.maxResultSize", "5G")
       .set("spark.task.maxFailures", "1")
     val sc = new SparkContext(conf)
+
+    val sparkNetHome = sys.env("SPARKNET_HOME")
 
     // information for logging
     val startTime = System.currentTimeMillis()
@@ -48,8 +44,6 @@ object CifarApp {
       }
       trainingLog.flush()
     }
-
-    var netWeights = net.getWeights()
 
     val loader = new CifarLoader(sparkNetHome + "/caffe/data/cifar10/")
     log("loading train data")
@@ -83,12 +77,25 @@ object CifarApp {
 
     val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
 
+    // initialize nets on workers
+    workers.foreach(_ => {
+      System.load(sparkNetHome + "/build/libccaffe.so")
+      var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/examples/cifar10/cifar10_full_train_test.prototxt")
+      netParameter = ProtoLoader.replaceDataLayers(netParameter, trainBatchSize, testBatchSize, channels, height, width)
+      val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/examples/cifar10/cifar10_full_solver.prototxt", netParameter, None)
+      val net = CaffeNet(solverParameter)
+      workerStore.setNet("net", net)
+    })
+
+    // initialize weights on master
+    var netWeights = workers.map(_ => workerStore.getNet("net").getWeights()).collect()(0)
+
     var i = 0
     while (true) {
       log("broadcasting weights", i)
       val broadcastWeights = sc.broadcast(netWeights)
       log("setting weights on workers", i)
-      workers.foreach(_ => net.setWeights(broadcastWeights.value))
+      workers.foreach(_ => workerStore.getNet("net").setWeights(broadcastWeights.value))
 
       if (i % 10 == 0) {
         log("testing, i")
@@ -98,8 +105,8 @@ object CifarApp {
             val len = lenIt.next
             assert(!lenIt.hasNext)
             val minibatchSampler = new MinibatchSampler(testMinibatchIt, len, len)
-            net.setTestData(minibatchSampler, len, None)
-            Array(net.test()).iterator // do testing
+            workerStore.getNet("net").setTestData(minibatchSampler, len, None)
+            Array(workerStore.getNet("net").test()).iterator // do testing
           }
         ).cache()
         val testScoresAggregate = testScores.reduce((a, b) => (a, b).zipped.map(_ + _))
@@ -115,14 +122,14 @@ object CifarApp {
           val len = lenIt.next
           assert(!lenIt.hasNext)
           val minibatchSampler = new MinibatchSampler(trainMinibatchIt, len, syncInterval)
-          net.setTrainData(minibatchSampler, None)
-          net.train(syncInterval)
+          workerStore.getNet("net").setTrainData(minibatchSampler, None)
+          workerStore.getNet("net").train(syncInterval)
           Array(0).iterator
         }
       ).foreachPartition(_ => ())
 
       log("collecting weights", i)
-      netWeights = workers.map(_ => { net.getWeights() }).reduce((a, b) => WeightCollection.add(a, b))
+      netWeights = workers.map(_ => { workerStore.getNet("net").getWeights() }).reduce((a, b) => WeightCollection.add(a, b))
       netWeights.scalarDivide(1F * numWorkers)
       i += 1
     }

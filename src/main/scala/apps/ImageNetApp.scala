@@ -27,13 +27,7 @@ object ImageNetApp {
   val fullImShape = Array(channels, fullHeight, fullWidth)
   val fullImSize = fullImShape.product
 
-  // initialize nets on workers
-  val sparkNetHome = "/root/SparkNet"
-  System.load(sparkNetHome + "/build/libccaffe.so")
-  var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/train_val.prototxt")
-  netParameter = ProtoLoader.replaceDataLayers(netParameter, trainBatchSize, testBatchSize, channels, croppedHeight, croppedWidth)
-  val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/solver.prototxt", netParameter, None)
-  val net = CaffeNet(solverParameter)
+  val workerStore = new WorkerStore()
 
   def main(args: Array[String]) {
     val numWorkers = args(0).toInt
@@ -43,6 +37,8 @@ object ImageNetApp {
       .set("spark.task.maxFailures", "1")
       .set("spark.eventLog.enabled", "true")
     val sc = new SparkContext(conf)
+
+    val sparkNetHome = sys.env("SPARKNET_HOME")
 
     // information for logging
     val startTime = System.currentTimeMillis()
@@ -56,8 +52,6 @@ object ImageNetApp {
       }
       trainingLog.flush()
     }
-
-    var netWeights = net.getWeights()
 
     val loader = new ImageNetLoader("sparknet")
     log("loading train data")
@@ -96,12 +90,25 @@ object ImageNetApp {
 
     val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
 
+    // initialize nets on workers
+    workers.foreach(_ => {
+      System.load(sparkNetHome + "/build/libccaffe.so")
+      var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/train_val.prototxt")
+      netParameter = ProtoLoader.replaceDataLayers(netParameter, trainBatchSize, testBatchSize, channels, croppedHeight, croppedWidth)
+      val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/solver.prototxt", netParameter, None)
+      val net = CaffeNet(solverParameter)
+      workerStore.setNet("net", net)
+    })
+
+    // initialize weights on master
+    var netWeights = workers.map(_ => workerStore.getNet("net").getWeights()).collect()(0)
+
     var i = 0
     while (true) {
       log("broadcasting weights", i)
       val broadcastWeights = sc.broadcast(netWeights)
       log("setting weights on workers", i)
-      workers.foreach(_ => net.setWeights(broadcastWeights.value))
+      workers.foreach(_ => workerStore.getNet("net").setWeights(broadcastWeights.value))
 
       if (i % 10 == 0) {
         log("testing", i)
@@ -130,8 +137,8 @@ object ImageNetApp {
               }
             }
             val minibatchSampler = new MinibatchSampler(testMinibatchIt, len, len)
-            net.setTestData(minibatchSampler, len, Some(imageNetTestPreprocessing))
-            Array(net.test()).iterator // do testing
+            workerStore.getNet("net").setTestData(minibatchSampler, len, Some(imageNetTestPreprocessing))
+            Array(workerStore.getNet("net").test()).iterator // do testing
           }
         ).cache() // the function inside has side effects, so we need the cache to ensure we don't redo it
         // add up test accuracies (a and b are arrays in case there are multiple test layers)
@@ -168,14 +175,14 @@ object ImageNetApp {
             }
           }
           val minibatchSampler = new MinibatchSampler(trainMinibatchIt, len, syncInterval)
-          net.setTrainData(minibatchSampler, Some(imageNetTrainPreprocessing))
-          net.train(syncInterval) // train for syncInterval minibatches
+          workerStore.getNet("net").setTrainData(minibatchSampler, Some(imageNetTrainPreprocessing))
+          workerStore.getNet("net").train(syncInterval) // train for syncInterval minibatches
           Array(0).iterator // give the closure the right signature
         }
       ).foreachPartition(_ => ())
 
       log("collecting weights", i)
-      netWeights = workers.map(_ => net.getWeights()).reduce((a, b) => WeightCollection.add(a, b))
+      netWeights = workers.map(_ => workerStore.getNet("net").getWeights()).reduce((a, b) => WeightCollection.add(a, b))
       netWeights.scalarDivide(1F * numWorkers)
 
       i += 1
