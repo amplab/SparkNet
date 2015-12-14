@@ -75,7 +75,8 @@ To run CifarApp, do the following:
 1. First get the Cifar data with
 
         $SPARKNET_HOME/caffe/data/cifar10/get_cifar10.sh
-2. Then submit the job with `spark-submit`
+2. Set the correct value of `sparkNetHome` in `src/main/scala/apps/CifarApp.scala`.
+3. Then submit the job with `spark-submit`
 
         $SPARK_HOME/bin/spark-submit --class apps.CifarApp SparkNetPreview/target/scala-2.10/sparknetpreview-assembly-0.1-SNAPSHOT.jar 5
 
@@ -88,8 +89,13 @@ To run ImageNet, do the following:
 
         TODO
 and put them on S3 at `s3://sparknet/ILSVRC2012_val`
-4. Set the correct value of `sparkNetHome` in `src/main/scala/apps/ImageNetApp.scala`.
-5. Submit a job on the master with
+4. On the master, create `~/.aws/credentials` with the following content:
+
+        [default]
+        aws_access_key_id=
+        aws_secret_access_key=
+5. Set the correct value of `sparkNetHome` in `src/main/scala/apps/ImageNetApp.scala`.
+6. Submit a job on the master with
 
         spark-submit --class apps.ImageNetApp $SPARKNET_HOME/target/scala-2.10/sparknet-assembly-0.1-SNAPSHOT.jar n
 where `n` is the number of worker nodes in your Spark cluster.
