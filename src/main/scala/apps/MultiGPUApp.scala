@@ -29,7 +29,7 @@ object MultiGPUApp {
 
     val caffeLib = CaffeLibrary.INSTANCE
     val state = net.getState()
-    caffeLib.load_weights_from_file(state, "/imgnet/params/000012000.caffemodel")
+    caffeLib.load_weights_from_file(state, "/imgnet/params/initialization.caffemodel")
 
     var netWeights = net.getWeights()
     val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
@@ -37,6 +37,12 @@ object MultiGPUApp {
     var i = 0
     while (true) {
       val broadcastWeights = sc.broadcast(netWeights)
+
+      // save weights:
+      if (i % 500 == 0) {
+        net.setWeights(netWeights)
+        caffeLib.save_weights_to_file(state, "/imgnet/params/" + "%09d".format(i) + "-before.caffemodel")
+      }
 
       workers.foreach(_ => net.setWeights(broadcastWeights.value))
 
@@ -54,7 +60,7 @@ object MultiGPUApp {
       // save weights:
       if (i % 500 == 0) {
         net.setWeights(netWeights)
-        caffeLib.save_weights_to_file(state, "/imgnet/params/" + "%09d".format(i) + ".caffemodel")
+        caffeLib.save_weights_to_file(state, "/imgnet/params/" + "%09d".format(i) + "-after.caffemodel")
       }
 
       i += 50
