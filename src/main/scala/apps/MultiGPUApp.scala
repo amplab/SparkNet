@@ -38,12 +38,6 @@ object MultiGPUApp {
     while (true) {
       val broadcastWeights = sc.broadcast(netWeights)
 
-      // save weights:
-      if (i % 500 == 0) {
-        net.setWeights(netWeights)
-        caffeLib.save_weights_to_file(state, "/imgnet/params/" + "%09d".format(i) + "-before.caffemodel")
-      }
-
       workers.foreach(_ => net.setWeights(broadcastWeights.value))
 
       val syncInterval = 50
