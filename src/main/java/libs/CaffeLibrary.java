@@ -57,6 +57,7 @@ public interface CaffeLibrary extends Library {
   void set_device(int gpu_id);
 
   void load_weights_from_file(Pointer state, String filename);
+  void save_weights_to_file(Pointer state, String filename);
   void restore_solver_from_file(Pointer state, String filename);
 
   boolean parse_net_prototxt(Pointer state, String filename);

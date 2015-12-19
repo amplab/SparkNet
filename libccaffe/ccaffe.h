@@ -59,6 +59,7 @@ extern "C" {
   void set_device(int gpu_id);
 
   void load_weights_from_file(caffenet_state* state, const char* filename);
+  void save_weights_to_file(caffenet_state* state, const char* filename);
   void restore_solver_from_file(caffenet_state* state, const char* filename);
 
   bool parse_net_prototxt(caffenet_state* state, const char* filename);
