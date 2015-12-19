@@ -41,7 +41,7 @@ object MultiGPUApp {
       // save weights:
       if (i % 500 == 0) {
         net.setWeights(netWeights)
-        caffeLib.save_weights_to_file(state, "/imgnet/params/" + "%09d".format(i) + ".caffemodel")
+        caffeLib.save_weights_to_file(state, "/imgnet/params/" + "%09d".format(i) + "-before.caffemodel")
       }
 
       workers.foreach(_ => net.setWeights(broadcastWeights.value))
@@ -56,6 +56,12 @@ object MultiGPUApp {
 
       netWeights = workers.map(_ => net.getWeights()).reduce((a, b) => WeightCollection.add(a, b))
       netWeights.scalarDivide(1F * numWorkers)
+
+      // save weights:
+      if (i % 500 == 0) {
+        net.setWeights(netWeights)
+        caffeLib.save_weights_to_file(state, "/imgnet/params/" + "%09d".format(i) + "-after.caffemodel")
+      }
 
       i += 50
     }
