@@ -16,7 +16,7 @@ class CreateLMDB(caffeLib: CaffeLibrary) {
     while (dataIt.hasNext) {
       val (image, label) = dataIt.next
       image.copyToBuffer(imBuffer)
-      caffeLib.write_to_db(state, imBuffer, label, height, width, counter.toString)
+      caffeLib.write_to_db(state, imBuffer, label, 3, height, width, counter.toString)
       counter += 1
       if (counter % 1000 == 0) {
         caffeLib.commit_db_txn(state)
@@ -39,7 +39,7 @@ class CreateLMDB(caffeLib: CaffeLibrary) {
       var i = 0
       while (i < images.length) {
         images(i).copyToBuffer(imBuffer)
-        caffeLib.write_to_db(state, imBuffer, labels(i), height, width, counter.toString)
+        caffeLib.write_to_db(state, imBuffer, labels(i), 3, height, width, counter.toString)
         counter += 1
         i += 1
       }

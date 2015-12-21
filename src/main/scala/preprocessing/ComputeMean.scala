@@ -78,9 +78,9 @@ object ComputeMean {
   def writeMeanToBinaryProto(caffeLib: CaffeLibrary, meanImage: NDArray, filename: String) = {
     val state = caffeLib.create_state()
     val shape = meanImage.shape
-    assert(shape(0) == 3)
+    val channels = shape(0)
     val height = shape(1)
     val width = shape(2)
-    caffeLib.save_mean_image(state, meanImage.toFlat(), height, width, filename, filename.length)
+    caffeLib.save_mean_image(state, meanImage.toFlat(), channels, height, width, filename, filename.length)
   }
 }

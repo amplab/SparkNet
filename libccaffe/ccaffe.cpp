@@ -54,16 +54,16 @@ void create_db(caffenet_state* state, char* db_name, int name_len) {
   state->txn = state->db->NewTransaction();
 }
 
-void write_to_db(caffenet_state* state, char* image, int label, int height, int width, char* key_str) {
+void write_to_db(caffenet_state* state, char* image, int label, int channels, int height, int width, char* key_str) {
   caffe::Datum datum;
-  datum.set_channels(3);
+  datum.set_channels(channels);
   datum.set_height(height);
   datum.set_width(width);
   datum.clear_data();
   datum.clear_float_data();
   datum.set_encoded(false);
   datum.set_label(label);
-  datum.set_data(image, 3 * height * width);
+  datum.set_data(image, channels * height * width);
   std::string out;
   CHECK(datum.SerializeToString(&out));
   state->txn->Put(key_str, out);
@@ -79,13 +79,13 @@ void close_db(caffenet_state* state) {
   state->db->Close();
 }
 
-void save_mean_image(caffenet_state* state, float* mean_image, int height, int width, char* filename, int filename_len) {
+void save_mean_image(caffenet_state* state, float* mean_image, int channels, int height, int width, char* filename, int filename_len) {
   caffe::BlobProto sum_blob;
   sum_blob.set_num(1);
-  sum_blob.set_channels(3);
+  sum_blob.set_channels(channels);
   sum_blob.set_height(height);
   sum_blob.set_width(width);
-  const int data_size = 3 * height * width; // TODO: check that this is the right size
+  const int data_size = channels * height * width; // TODO: check that this is the right size
   for (int i = 0; i < data_size; ++i) {
     sum_blob.add_data(0.);
   }
