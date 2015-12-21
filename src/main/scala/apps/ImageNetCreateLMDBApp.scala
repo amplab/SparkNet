@@ -106,7 +106,7 @@ object ImageNetCreateLMDBApp {
     log("write train data to LMDB")
     trainMinibatchRDD.mapPartitions(minibatchIt => {
       FileUtils.deleteDirectory(new File(trainLMDBFilename))
-      val LMDBCreator = new CreateLMDB(workerStore.getLib)
+      val LMDBCreator = new CreateLMDB(workerStore.getLib, "leveldb")
       LMDBCreator.makeLMDBFromMinibatchPartition(minibatchIt, trainLMDBFilename, fullHeight, fullWidth)
       Array(0).iterator
     }).foreach(_ => ())
@@ -114,7 +114,7 @@ object ImageNetCreateLMDBApp {
     log("write test data to LMDB")
     testMinibatchRDD.mapPartitions(minibatchIt => {
       FileUtils.deleteDirectory(new File(testLMDBFilename))
-      val LMDBCreator = new CreateLMDB(workerStore.getLib)
+      val LMDBCreator = new CreateLMDB(workerStore.getLib, "leveldb")
       LMDBCreator.makeLMDBFromMinibatchPartition(minibatchIt, testLMDBFilename, fullHeight, fullWidth)
       Array(0).iterator
     }).foreach(_ => ())

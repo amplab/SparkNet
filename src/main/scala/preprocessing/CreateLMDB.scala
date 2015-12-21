@@ -6,11 +6,12 @@ import org.apache.spark.rdd.RDD
 
 import libs._
 
-class CreateLMDB(caffeLib: CaffeLibrary) {
+// dbType should be either "lmdb" or "leveldb"
+class CreateLMDB(caffeLib: CaffeLibrary, dbType: String) {
   val state = caffeLib.create_state()
 
   def makeLMDBFromPartition(dataIt: Iterator[(ByteImage, Int)], dbName: String, height: Int, width: Int) = {
-    caffeLib.create_db(state, dbName, dbName.length)
+    caffeLib.create_db(state, dbName, dbName.length, dbType, dbType.length)
     var counter = 0
     val imBuffer = new Array[Byte](3 * height * width)
     while (dataIt.hasNext) {
@@ -31,7 +32,7 @@ class CreateLMDB(caffeLib: CaffeLibrary) {
   }
 
   def makeLMDBFromMinibatchPartition(minibatchIt: Iterator[(Array[ByteImage], Array[Int])], dbName: String, height: Int, width: Int) = {
-    caffeLib.create_db(state, dbName, dbName.length)
+    caffeLib.create_db(state, dbName, dbName.length, dbType, dbType.length)
     var counter = 0
     val imBuffer = new Array[Byte](3 * height * width)
     while (minibatchIt.hasNext) {

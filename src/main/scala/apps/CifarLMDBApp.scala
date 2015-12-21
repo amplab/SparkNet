@@ -96,7 +96,7 @@ object CifarLMDBApp {
     log("write train data to LMDB")
     trainRDDConverted.mapPartitions(dataIt => {
       FileUtils.deleteDirectory(new File(trainLMDBFilename))
-      val LMDBCreator = new CreateLMDB(workerStore.getLib)
+      val LMDBCreator = new CreateLMDB(workerStore.getLib, "leveldb")
       LMDBCreator.makeLMDBFromPartition(dataIt, trainLMDBFilename, height, width)
       Array(0).iterator
     }).foreach(_ => ())
@@ -104,7 +104,7 @@ object CifarLMDBApp {
     log("write test data to LMDB")
     testRDDConverted.mapPartitions(dataIt => {
       FileUtils.deleteDirectory(new File(testLMDBFilename))
-      val LMDBCreator = new CreateLMDB(workerStore.getLib)
+      val LMDBCreator = new CreateLMDB(workerStore.getLib, "leveldb")
       LMDBCreator.makeLMDBFromPartition(dataIt, testLMDBFilename, height, width)
       Array(0).iterator
     }).foreach(_ => ())

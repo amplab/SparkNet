@@ -48,8 +48,9 @@ int get_dtype_size() {
   return sizeof(DTYPE);
 }
 
-void create_db(caffenet_state* state, char* db_name, int name_len) {
-  state->db = caffe::db::GetDB("leveldb");
+void create_db(caffenet_state* state, char* db_name, int name_len, char* db_type, int db_type_len) {
+  // db_type should be either "leveldb" or "lmdb"
+  state->db = caffe::db::GetDB(std::string(db_type, db_type_len));
   state->db->Open(std::string(db_name, name_len), caffe::db::NEW);
   state->txn = state->db->NewTransaction();
 }
