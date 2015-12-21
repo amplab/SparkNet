@@ -26,8 +26,23 @@ class ScaleAndConvert(batchsize: Int, height: Int, width: Int) extends java.io.S
     }
   }
 
+  def scaleAndConvertWithCompression(data: RDD[(Array[Byte], Int)]) : RDD[(ByteImage, Int)] = {
+    data.flatMap{
+      case (compressedImage, label) => {
+        convertImage(compressedImage) match {
+          case Some(image) => Seq((image, label))
+          case None => Seq[(ByteImage, Int)]()
+        }
+      }
+    }
+  }
+
+  def scaleAndConvertWithoutCompression(data: RDD[(Array[Byte], Int)]) : RDD[(ByteImage, Int)] = {
+    data.map{ case (image, label) => (new ByteImage(image, height, width), label) }
+  }
+
   // This method will drop examples so that the number of training examples is divisible by the batch size
-  def makeMinibatchRDD(data: RDD[(Array[Byte], Int)]) : RDD[(Array[ByteImage], Array[Int])] = {
+  def makeMinibatchRDDWithCompression(data: RDD[(Array[Byte], Int)]) : RDD[(Array[ByteImage], Array[Int])] = {
     data.mapPartitions(
       it => {
         val accumulator = new ArrayBuffer[(Array[ByteImage], Array[Int])]
@@ -36,8 +51,8 @@ class ScaleAndConvert(batchsize: Int, height: Int, width: Int) extends java.io.S
           val imageMinibatchAccumulator = new ArrayBuffer[ByteImage]
           val labelMinibatchAccumulator = new ArrayBuffer[Int]
           while (it.hasNext && imageMinibatchAccumulator.length != batchsize) {
-            val (compressedImg, label) = it.next
-            convertImage(compressedImg) match {
+            val (compressedImage, label) = it.next
+            convertImage(compressedImage) match {
               case Some(image) => {
                 imageMinibatchAccumulator += image
                 labelMinibatchAccumulator += label

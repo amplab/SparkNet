@@ -34,7 +34,7 @@ object CifarApp {
 
     // information for logging
     val startTime = System.currentTimeMillis()
-    val trainingLog = new PrintWriter(new File("training_log_" + startTime.toString + ".txt" ))
+    val trainingLog = new PrintWriter(new File(sparkNetHome + "/training_log_" + startTime.toString + ".txt" ))
     def log(message: String, i: Int = -1) {
       val elapsedTime = 1F * (System.currentTimeMillis() - startTime) / 1000
       if (i == -1) {
@@ -80,10 +80,11 @@ object CifarApp {
     // initialize nets on workers
     workers.foreach(_ => {
       System.load(sparkNetHome + "/build/libccaffe.so")
+      val caffeLib = CaffeLibrary.INSTANCE
       var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/examples/cifar10/cifar10_full_train_test.prototxt")
       netParameter = ProtoLoader.replaceDataLayers(netParameter, trainBatchSize, testBatchSize, channels, height, width)
       val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/examples/cifar10/cifar10_full_solver.prototxt", netParameter, None)
-      val net = CaffeNet(solverParameter)
+      val net = CaffeNet(caffeLib, solverParameter)
       workerStore.setNet("net", net)
     })
 

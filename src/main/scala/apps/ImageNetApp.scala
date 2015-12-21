@@ -35,14 +35,13 @@ object ImageNetApp {
       .setAppName("ImageNet")
       .set("spark.driver.maxResultSize", "30G")
       .set("spark.task.maxFailures", "1")
-      .set("spark.eventLog.enabled", "true")
     val sc = new SparkContext(conf)
 
     val sparkNetHome = sys.env("SPARKNET_HOME")
 
     // information for logging
     val startTime = System.currentTimeMillis()
-    val trainingLog = new PrintWriter(new File("training_log_" + startTime.toString + ".txt" ))
+    val trainingLog = new PrintWriter(new File(sparkNetHome + "/training_log_" + startTime.toString + ".txt" ))
     def log(message: String, i: Int = -1) {
       val elapsedTime = 1F * (System.currentTimeMillis() - startTime) / 1000
       if (i == -1) {
@@ -55,19 +54,19 @@ object ImageNetApp {
 
     val loader = new ImageNetLoader("sparknet")
     log("loading train data")
-    var trainRDD = loader.apply(sc, "ILSVRC2012_training/", "train.txt")
+    var trainRDD = loader.apply(sc, "ILSVRC2012_train/", "train.txt")
     log("loading test data")
-    val testRDD = loader.apply(sc, "ILSVRC2012_val/", "val.txt")
+    val testRDD = loader.apply(sc, "ILSVRC2012_test/", "test.txt")
 
     log("processing train data")
     val trainConverter = new ScaleAndConvert(trainBatchSize, fullHeight, fullWidth)
-    var trainMinibatchRDD = trainConverter.makeMinibatchRDD(trainRDD).persist()
+    var trainMinibatchRDD = trainConverter.makeMinibatchRDDWithCompression(trainRDD).persist()
     val numTrainMinibatches = trainMinibatchRDD.count()
     log("numTrainMinibatches = " + numTrainMinibatches.toString)
 
     log("processing test data")
     val testConverter = new ScaleAndConvert(testBatchSize, fullHeight, fullWidth)
-    var testMinibatchRDD = testConverter.makeMinibatchRDD(testRDD).persist()
+    var testMinibatchRDD = testConverter.makeMinibatchRDDWithCompression(testRDD).persist()
     val numTestMinibatches = testMinibatchRDD.count()
     log("numTestMinibatches = " + numTestMinibatches.toString)
 
@@ -75,7 +74,7 @@ object ImageNetApp {
     val numTestData = numTestMinibatches * testBatchSize
 
     log("computing mean image")
-    val meanImage = ComputeMean(trainMinibatchRDD, fullImShape, numTrainData.toInt)
+    val meanImage = ComputeMean.computeMeanFromMinibatches(trainMinibatchRDD, fullImShape, numTrainData.toInt)
     val meanImageBuffer = meanImage.getBuffer()
     val broadcastMeanImageBuffer = sc.broadcast(meanImageBuffer)
 
@@ -93,10 +92,11 @@ object ImageNetApp {
     // initialize nets on workers
     workers.foreach(_ => {
       System.load(sparkNetHome + "/build/libccaffe.so")
+      val caffeLib = CaffeLibrary.INSTANCE
       var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/train_val.prototxt")
       netParameter = ProtoLoader.replaceDataLayers(netParameter, trainBatchSize, testBatchSize, channels, croppedHeight, croppedWidth)
       val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/solver.prototxt", netParameter, None)
-      val net = CaffeNet(solverParameter)
+      val net = CaffeNet(caffeLib, solverParameter)
       workerStore.setNet("net", net)
     })
 

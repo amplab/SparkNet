@@ -60,10 +60,10 @@ trait Net {
   def getWeights(): WeightCollection
 }
 
-class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
-  val numLayers = library.num_layers(state)
-  val layerNames = List.range(0, numLayers).map(i => library.layer_name(state, i))
-  val layerNumBlobs = List.range(0, numLayers).map(i => library.num_layer_weights(state, i))
+class CaffeNet(state: Pointer, caffeLib: CaffeLibrary) extends Net {
+  val numLayers = caffeLib.num_layers(state)
+  val layerNames = List.range(0, numLayers).map(i => caffeLib.layer_name(state, i))
+  val layerNumBlobs = List.range(0, numLayers).map(i => caffeLib.num_layer_weights(state, i))
 
   // store callbacks to save them from garbage collection
   var imageTrainCallback : Option[CaffeLibrary.java_callback_t] = None
@@ -71,42 +71,48 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
   var imageTestCallback : Option[CaffeLibrary.java_callback_t] = None
   var labelTestCallback : Option[CaffeLibrary.java_callback_t] = None
 
-  val dtypeSize: Int = library.get_dtype_size()
-  val intSize: Int = library.get_int_size()
+  val dtypeSize: Int = caffeLib.get_dtype_size()
+  val intSize: Int = caffeLib.get_int_size()
 
   var numTestBatches = None: Option[Int]
 
   def setTrainData(minibatchSampler: MinibatchSampler, trainPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None) = {
     imageTrainCallback = Some(makeImageCallback(minibatchSampler, trainPreprocessing))
     labelTrainCallback = Some(makeLabelCallback(minibatchSampler))
-    library.set_train_data_callback(state, 0, imageTrainCallback.get)
-    library.set_train_data_callback(state, 1, labelTrainCallback.get)
+    caffeLib.set_train_data_callback(state, 0, imageTrainCallback.get)
+    caffeLib.set_train_data_callback(state, 1, labelTrainCallback.get)
   }
 
-  def setTestData(minibatchSampler: MinibatchSampler, len: Int, testPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None) = {
-    numTestBatches = Some(len)
+  def setTestData(minibatchSampler: MinibatchSampler, numBatches: Int, testPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None) = {
+    numTestBatches = Some(numBatches)
     imageTestCallback = Some(makeImageCallback(minibatchSampler, testPreprocessing))
     labelTestCallback = Some(makeLabelCallback(minibatchSampler))
-    library.set_test_data_callback(state, 0, imageTestCallback.get)
-    library.set_test_data_callback(state, 1, labelTestCallback.get)
+    caffeLib.set_test_data_callback(state, 0, imageTestCallback.get)
+    caffeLib.set_test_data_callback(state, 1, labelTestCallback.get)
+  }
+
+  def setNumTestBatches(numBatches: Int) = {
+    numTestBatches = Some(numBatches)
   }
 
   def train(numSteps: Int) = {
-    library.set_mode_gpu()
-    library.solver_step(state, numSteps)
+    caffeLib.set_mode_gpu()
+    caffeLib.solver_step(state, numSteps)
   }
 
   def test(): Array[Float] = {
-    library.set_mode_gpu()
+    caffeLib.set_mode_gpu()
+    print("hey\n")
     assert(!numTestBatches.isEmpty)
-    library.solver_test(state, numTestBatches.get) // you must run this before running library.num_test_scores(state)
-    val numTestScores = library.num_test_scores(state)
+    caffeLib.solver_test(state, numTestBatches.get) // you must run this before running caffeLib.num_test_scores(state)
+    val numTestScores = caffeLib.num_test_scores(state)
     val testScores = new Array[Float](numTestScores)
     for (i <- 0 to numTestScores - 1) {
-      testScores(i) = library.get_test_score(state, i) // for accuracy layers, this returns the average accuracy over a minibatch
+      testScores(i) = caffeLib.get_test_score(state, i) // for accuracy layers, this returns the average accuracy over a minibatch
     }
     print("testScores = " + testScores.deep.toString + "\n")
     return testScores
+    //return Array(0)
   }
 
   def setWeights(allWeights: WeightCollection) = {
@@ -114,11 +120,11 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
     for (i <- 0 to numLayers - 1) {
       assert(allWeights.allWeights(layerNames(i)).length == layerNumBlobs(i)) // check that we have the correct number of weights
       for (j <- 0 to layerNumBlobs(i) - 1) {
-        val blob = library.get_weight_blob(state, i, j)
+        val blob = caffeLib.get_weight_blob(state, i, j)
         val shape = getShape(blob)
         assert(shape.deep == allWeights.allWeights(layerNames(i))(j).shape.deep) // check that weights are the correct shape
         val flatWeights = allWeights.allWeights(layerNames(i))(j).toFlat() // this allocation can be avoided
-        val blob_pointer = library.get_data(blob)
+        val blob_pointer = caffeLib.get_data(blob)
         val size = shape.product
         var t = 0
         while (t < size) {
@@ -134,10 +140,10 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
     for (i <- 0 to numLayers - 1) {
       val weightList = MutableList[NDArray]()
       for (j <- 0 to layerNumBlobs(i) - 1) {
-        val blob = library.get_weight_blob(state, i, j)
+        val blob = caffeLib.get_weight_blob(state, i, j)
         val shape = getShape(blob)
         val data = new Array[Float](shape.product)
-        val blob_pointer = library.get_data(blob)
+        val blob_pointer = caffeLib.get_data(blob)
         val size = shape.product
         var t = 0
         while (t < size) {
@@ -193,21 +199,25 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
   }
 
   def loadWeightsFromFile(filename: String) {
-    library.load_weights_from_file(state, filename)
+    caffeLib.load_weights_from_file(state, filename)
+  }
+
+  def saveWeightsToFile(filename: String) {
+    caffeLib.save_weights_to_file(state, filename)
   }
 
   private def getShape(blob: Pointer): Array[Int] = {
-    val numAxes = library.get_num_axes(blob)
+    val numAxes = caffeLib.get_num_axes(blob)
     val shape = new Array[Int](numAxes)
     for (k <- 0 to numAxes - 1) {
-      shape(k) = library.get_axis_shape(blob, k)
+      shape(k) = caffeLib.get_axis_shape(blob, k)
     }
     return shape
   }
 }
 
 object CaffeNet {
-  def apply(solverParameter: SolverParameter): CaffeNet = {
+  def apply(caffeLib: CaffeLibrary, solverParameter: SolverParameter): CaffeNet = {
     val caffeLib = CaffeLibrary.INSTANCE
     val state = caffeLib.create_state()
     val byteArr = solverParameter.toByteArray()

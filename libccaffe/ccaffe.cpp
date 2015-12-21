@@ -2,8 +2,10 @@
 #include "caffe/solver.hpp"
 #include "caffe/sgd_solvers.hpp"
 #include "caffe/data_layers.hpp"
+#include "caffe/data_transformer.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
+#include "caffe/util/db.hpp"
 #include "caffe/common.hpp"
 #include <string>
 #include <vector>
@@ -24,6 +26,8 @@ struct caffenet_state {
   std::vector<DTYPE> *test_score; // scratch space to store test scores
   Message* proto; // scratch space to store protobuf message
   std::vector<char>* buffer; // scratch space to pass serialized protobuf to client
+  caffe::db::DB *db; // database for storing images in lmdb
+  caffe::db::Transaction *txn; // transaction for storing images in lmdb
 };
 
 void init_logging(const char* log_filename, int log_verbosity) {
@@ -44,6 +48,53 @@ int get_dtype_size() {
   return sizeof(DTYPE);
 }
 
+void create_db(caffenet_state* state, char* db_name, int name_len) {
+  state->db = caffe::db::GetDB("leveldb");
+  state->db->Open(std::string(db_name, name_len), caffe::db::NEW);
+  state->txn = state->db->NewTransaction();
+}
+
+void write_to_db(caffenet_state* state, char* image, int label, int height, int width, char* key_str) {
+  caffe::Datum datum;
+  datum.set_channels(3);
+  datum.set_height(height);
+  datum.set_width(width);
+  datum.clear_data();
+  datum.clear_float_data();
+  datum.set_encoded(false);
+  datum.set_label(label);
+  datum.set_data(image, 3 * height * width);
+  std::string out;
+  CHECK(datum.SerializeToString(&out));
+  state->txn->Put(key_str, out);
+}
+
+void commit_db_txn(caffenet_state* state) {
+  state->txn->Commit();
+  delete state->txn;
+  state->txn = state->db->NewTransaction();
+}
+
+void close_db(caffenet_state* state) {
+  state->db->Close();
+}
+
+void save_mean_image(caffenet_state* state, float* mean_image, int height, int width, char* filename, int filename_len) {
+  caffe::BlobProto sum_blob;
+  sum_blob.set_num(1);
+  sum_blob.set_channels(3);
+  sum_blob.set_height(height);
+  sum_blob.set_width(width);
+  const int data_size = 3 * height * width; // TODO: check that this is the right size
+  for (int i = 0; i < data_size; ++i) {
+    sum_blob.add_data(0.);
+  }
+  for (int i = 0; i < data_size; ++i) {
+    sum_blob.set_data(i, mean_image[i]);
+  }
+  caffe::WriteProtoToBinaryFile(sum_blob, std::string(filename, filename_len));
+}
+
 caffenet_state* create_state() {
   caffenet_state *state = new caffenet_state();
   state->net = NULL;
@@ -52,6 +103,8 @@ caffenet_state* create_state() {
   state->test_score = new std::vector<DTYPE>();
   state->proto = NULL;
   state->buffer = new std::vector<char>();
+  state->db = NULL;
+  state->txn = NULL;
   return state;
 }
 
@@ -66,6 +119,8 @@ void destroy_state(caffenet_state* state) {
   }
   delete state->test_score;
   delete state->buffer;
+  delete state->db;
+  delete state->txn;
   delete state;
 }
 
@@ -204,6 +259,12 @@ void set_device(int gpu_id) {
 
 void load_weights_from_file(caffenet_state* state, const char* filename) {
   state->net->CopyTrainedLayersFrom(filename);
+}
+
+void save_weights_to_file(caffenet_state* state, const char* filename) {
+  caffe::NetParameter net_param;
+  state->net->ToProto(&net_param, state->solver->param().snapshot_diff());
+  WriteProtoToBinaryFile(net_param, filename);
 }
 
 void restore_solver_from_file(caffenet_state* state, const char* filename) {

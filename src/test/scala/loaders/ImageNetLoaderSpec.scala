@@ -19,9 +19,9 @@ class ImageNetLoaderSpec extends FlatSpec {
     val conf = new SparkConf().setAppName("ImageLoaderTest").setMaster("local")
     val sc = new SparkContext(conf)
     val loader = new ImageNetLoader("sparknet")
-    val rdd = loader.apply(sc, "shuffled_trainset/files-shuf-000", "train_correct.txt")
+    val rdd = loader.apply(sc, "ILSVRC2012_train/", "train.txt")
     val converter = new ScaleAndConvert(1, 256, 256)
-    val result = converter.makeMinibatchRDD(rdd).collect()
+    val result = converter.makeMinibatchRDDWithCompression(rdd).collect()
     assert(result.length == 1281)
   }
 }

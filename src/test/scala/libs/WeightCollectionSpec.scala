@@ -5,6 +5,7 @@ import java.io._
 class WeightCollectionSpec extends FlatSpec {
   val sparkNetHome = sys.env("SPARKNET_HOME")
   System.load(sparkNetHome + "/build/libccaffe.so")
+  val caffeLib = CaffeLibrary.INSTANCE
 
   val batchsize = 256
   val channels = 3
@@ -13,7 +14,7 @@ class WeightCollectionSpec extends FlatSpec {
   var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/train_val.prototxt")
   netParameter = ProtoLoader.replaceDataLayers(netParameter, batchsize, batchsize, channels, imgSize, imgSize)
   val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/solver.prototxt", netParameter, None)
-  val net = CaffeNet(solverParameter)
+  val net = CaffeNet(caffeLib, solverParameter)
   var netWeights = net.getWeights()
 
   for (i <- 1 to 3) {
