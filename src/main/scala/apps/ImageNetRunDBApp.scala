@@ -12,7 +12,7 @@ import libs._
 import loaders._
 import preprocessing._
 
-object ImageNetRunLMDBApp {
+object ImageNetRunDBApp {
   val trainBatchSize = 256
   val testBatchSize = 50
   val channels = 3
@@ -28,7 +28,7 @@ object ImageNetRunLMDBApp {
   def main(args: Array[String]) {
     val numWorkers = args(0).toInt
     val conf = new SparkConf()
-      .setAppName("ImageNetRunLMDB")
+      .setAppName("ImageNetRunDB")
       .set("spark.driver.maxResultSize", "30G")
       .set("spark.task.maxFailures", "1")
     val sc = new SparkContext(conf)

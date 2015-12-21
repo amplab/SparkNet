@@ -21,7 +21,7 @@ layer {
 #    mirror: true
 #  }
   data_param {
-    source: "examples/imagenet/ilsvrc12_train_lmdb"
+    source: "examples/imagenet/ilsvrc12_train_db"
     batch_size: 256
     backend: LEVELDB
   }
@@ -48,7 +48,7 @@ layer {
 #    mirror: false
 #  }
   data_param {
-    source: "examples/imagenet/ilsvrc12_val_lmdb"
+    source: "examples/imagenet/ilsvrc12_val_db"
     batch_size: 50
     backend: LEVELDB
   }

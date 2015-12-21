@@ -11,7 +11,7 @@ import libs._
 import loaders._
 import preprocessing._
 
-object ImageNetCreateLMDBApp {
+object ImageNetCreateDBApp {
   val trainBatchSize = 256
   val testBatchSize = 50
   val channels = 3
@@ -27,7 +27,7 @@ object ImageNetCreateLMDBApp {
   def main(args: Array[String]) {
     val numWorkers = args(0).toInt
     val conf = new SparkConf()
-      .setAppName("ImageNetCreateLMDB")
+      .setAppName("ImageNetCreateDB")
       .set("spark.driver.maxResultSize", "30G")
       .set("spark.task.maxFailures", "1")
     val sc = new SparkContext(conf)
@@ -86,8 +86,8 @@ object ImageNetCreateLMDBApp {
       pw.flush()
     })
 
-    val trainLMDBFilename = sparkNetHome + "/caffe/examples/imagenet/ilsvrc12_train_lmdb"
-    val testLMDBFilename = sparkNetHome + "/caffe/examples/imagenet/ilsvrc12_val_lmdb"
+    val trainDBFilename = sparkNetHome + "/caffe/examples/imagenet/ilsvrc12_train_db"
+    val testDBFilename = sparkNetHome + "/caffe/examples/imagenet/ilsvrc12_val_db"
     val meanImageFilename = sparkNetHome + "/caffe/data/ilsvrc12/imagenet_mean.binaryproto"
 
     val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
@@ -103,19 +103,19 @@ object ImageNetCreateLMDBApp {
     val caffeLib = CaffeLibrary.INSTANCE
     caffeLib.set_basepath(sparkNetHome + "/caffe/")
 
-    log("write train data to LMDB")
+    log("write train data to DB")
     trainMinibatchRDD.mapPartitions(minibatchIt => {
-      FileUtils.deleteDirectory(new File(trainLMDBFilename))
-      val LMDBCreator = new CreateLMDB(workerStore.getLib, "leveldb")
-      LMDBCreator.makeLMDBFromMinibatchPartition(minibatchIt, trainLMDBFilename, fullHeight, fullWidth)
+      FileUtils.deleteDirectory(new File(trainDBFilename))
+      val DBCreator = new CreateDB(workerStore.getLib, "leveldb")
+      DBCreator.makeDBFromMinibatchPartition(minibatchIt, trainDBFilename, fullHeight, fullWidth)
       Array(0).iterator
     }).foreach(_ => ())
 
-    log("write test data to LMDB")
+    log("write test data to DB")
     testMinibatchRDD.mapPartitions(minibatchIt => {
-      FileUtils.deleteDirectory(new File(testLMDBFilename))
-      val LMDBCreator = new CreateLMDB(workerStore.getLib, "leveldb")
-      LMDBCreator.makeLMDBFromMinibatchPartition(minibatchIt, testLMDBFilename, fullHeight, fullWidth)
+      FileUtils.deleteDirectory(new File(testDBFilename))
+      val DBCreator = new CreateDB(workerStore.getLib, "leveldb")
+      DBCreator.makeDBFromMinibatchPartition(minibatchIt, testDBFilename, fullHeight, fullWidth)
       Array(0).iterator
     }).foreach(_ => ())
 

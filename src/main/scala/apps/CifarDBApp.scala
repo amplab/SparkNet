@@ -10,10 +10,10 @@ import libs._
 import loaders._
 import preprocessing._
 
-// this app pulls Cifar10 and creates LMDB databases which Caffe reads from, you
+// this app pulls Cifar10 and creates LevelDB databases which Caffe reads from, you
 // need to run $SPARKNET_HOME/caffe/data/cifar10/get_cifar10.sh to get the cifar
 // data before running this app
-object CifarLMDBApp {
+object CifarDBApp {
   val trainBatchSize = 100
   val testBatchSize = 100
   val channels = 3
@@ -27,7 +27,7 @@ object CifarLMDBApp {
   def main(args: Array[String]) {
     val numWorkers = args(0).toInt
     val conf = new SparkConf()
-      .setAppName("CifarLMDB")
+      .setAppName("CifarDB")
       .set("spark.driver.maxResultSize", "5G")
       .set("spark.task.maxFailures", "1")
     val sc = new SparkContext(conf)
@@ -90,22 +90,22 @@ object CifarLMDBApp {
     val caffeLib = CaffeLibrary.INSTANCE
     caffeLib.set_basepath(sparkNetHome + "/caffe/")
 
-    val trainLMDBFilename = sparkNetHome + "/caffe/examples/cifar10/cifar10_train_lmdb"
-    val testLMDBFilename = sparkNetHome + "/caffe/examples/cifar10/cifar10_test_lmdb"
+    val trainDBFilename = sparkNetHome + "/caffe/examples/cifar10/cifar10_train_db"
+    val testDBFilename = sparkNetHome + "/caffe/examples/cifar10/cifar10_test_db"
 
-    log("write train data to LMDB")
+    log("write train data to DB")
     trainRDDConverted.mapPartitions(dataIt => {
-      FileUtils.deleteDirectory(new File(trainLMDBFilename))
-      val LMDBCreator = new CreateLMDB(workerStore.getLib, "leveldb")
-      LMDBCreator.makeLMDBFromPartition(dataIt, trainLMDBFilename, height, width)
+      FileUtils.deleteDirectory(new File(trainDBFilename))
+      val DBCreator = new CreateDB(workerStore.getLib, "leveldb")
+      DBCreator.makeDBFromPartition(dataIt, trainDBFilename, height, width)
       Array(0).iterator
     }).foreach(_ => ())
 
-    log("write test data to LMDB")
+    log("write test data to DB")
     testRDDConverted.mapPartitions(dataIt => {
-      FileUtils.deleteDirectory(new File(testLMDBFilename))
-      val LMDBCreator = new CreateLMDB(workerStore.getLib, "leveldb")
-      LMDBCreator.makeLMDBFromPartition(dataIt, testLMDBFilename, height, width)
+      FileUtils.deleteDirectory(new File(testDBFilename))
+      val DBCreator = new CreateDB(workerStore.getLib, "leveldb")
+      DBCreator.makeDBFromPartition(dataIt, testDBFilename, height, width)
       Array(0).iterator
     }).foreach(_ => ())
 
