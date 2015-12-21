@@ -380,6 +380,60 @@ void P2PSync<Dtype>::on_gradients_ready() {
 }
 
 template<typename Dtype>
+vector<shared_ptr<P2PSync<Dtype> > > P2PSync<Dtype>::initialize(const vector<int>& gpus) {
+  // Pair devices for map-reduce synchronization
+  vector<DevicePair> pairs;
+  DevicePair::compute(gpus, &pairs);
+  ostringstream s;
+  for (int i = 1; i < pairs.size(); ++i) {
+    s << (i == 1 ? "" : ", ") << pairs[i].parent() << ":" << pairs[i].device();
+  }
+  LOG(INFO)<< "GPUs pairs " << s.str();
+
+  SolverParameter param(solver_->param());
+  vector<shared_ptr<P2PSync<Dtype> > > syncs(gpus.size());
+
+  // Build the GPU tree by finding the parent for each solver
+  for (int attempts = 0; attempts < pairs.size(); ++attempts) {
+    for (int i = 1; i < pairs.size(); ++i) {
+      if (!syncs[i].get()) {
+        P2PSync<Dtype>* parent = NULL;
+        for (int j = 0; j < syncs.size(); ++j) {
+          P2PSync<Dtype>* sync = j == 0 ? this : syncs[j].get();
+          if (sync) {
+            const SolverParameter& p = sync->solver()->param();
+            if (p.device_id() == pairs[i].parent()) {
+              parent = sync;
+            }
+          }
+        }
+        if (parent) {
+          param.set_device_id(pairs[i].device());
+          syncs[i].reset(new P2PSync<Dtype>(solver_, parent, param));
+          parent->children_.push_back((P2PSync<Dtype>*) syncs[i].get());
+        }
+      }
+    }
+  }
+
+  LOG(INFO)<< "Starting Optimization";
+
+  return syncs;
+}
+
+template<typename Dtype>
+void P2PSync<Dtype>::step(vector<shared_ptr<P2PSync<Dtype> > > syncs, int num_steps) {
+  for (int i = 1; i < syncs.size(); ++i) {
+    syncs[i]->StartInternalThread();
+  }
+  // Run root solver on current thread
+  solver_->Step(num_steps);
+  for (int i = 1; i < syncs.size(); ++i) {
+    syncs[i]->StopInternalThread();
+  }
+}
+
+template<typename Dtype>
 void P2PSync<Dtype>::run(const vector<int>& gpus) {
   // Pair devices for map-reduce synchronization
   vector<DevicePair> pairs;
