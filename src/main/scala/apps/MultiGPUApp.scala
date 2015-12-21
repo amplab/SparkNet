@@ -16,7 +16,7 @@ object MultiGPUApp {
 	caffeLib.set_basepath(sparkNetHome + "/caffe/")
   var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_googlenet/train_val.prototxt")
   val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_googlenet/quick_solver.prototxt", netParameter, None)
-  val net = CaffeNet(solverParameter, 1) // TODO: Fix 1 not working here
+  val net = CaffeNet(solverParameter, 4) // TODO: Fix 1 not working here
 
   def main(args: Array[String]) {
     val numWorkers = args(0).toInt
@@ -29,7 +29,7 @@ object MultiGPUApp {
 
     val caffeLib = CaffeLibrary.INSTANCE
     val state = net.getState()
-    caffeLib.load_weights_from_file(state, "/imgnet/params/000010000.caffemodel")
+    caffeLib.load_weights_from_file(state, "/imgnet/params/initialization.caffemodel")
 
     var netWeights = net.getWeights()
     val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
@@ -37,6 +37,12 @@ object MultiGPUApp {
     var i = 0
     while (true) {
       val broadcastWeights = sc.broadcast(netWeights)
+
+      // save weights:
+      if (i % 500 == 0) {
+        net.setWeights(netWeights)
+        caffeLib.save_weights_to_file(state, "/imgnet/params/" + "%09d".format(i) + ".caffemodel")
+      }
 
       workers.foreach(_ => net.setWeights(broadcastWeights.value))
 
