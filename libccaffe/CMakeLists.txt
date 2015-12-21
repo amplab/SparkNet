@@ -53,6 +53,18 @@ include_directories(${PROJECT_BINARY_DIR}/../caffe/include/)
 # for gtest
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../caffe/src/)
 
+# for lmdb
+add_definitions(-DUSE_LMDB)
+find_package(LMDB REQUIRED)
+include_directories(SYSTEM ${LMDB_INCLUDE_DIRS})
+list(APPEND Caffe_LINKER_LIBS ${LMDB_LIBRARIES})
+
+# for leveldb
+add_definitions(-DUSE_LEVELDB)
+find_package(LevelDB REQUIRED)
+include_directories(SYSTEM ${LevelDB_INCLUDE_DIRS})
+list(APPEND Caffe_LINKER_LIBS ${LevelDB_LIBRARIES})
+
 ## The files
 
 file(GLOB Source GLOB "${CMAKE_CURRENT_SOURCE_DIR}/../caffe/src/caffe/*.cpp")

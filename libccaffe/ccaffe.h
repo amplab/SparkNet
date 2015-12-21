@@ -17,6 +17,13 @@ extern "C" {
   int get_int_size(); // get number of bytes for native int
   int get_dtype_size(); // get number of bytes for DTYPE
 
+  void create_db(caffenet_state* state, char* db_name, int name_len, char* db_type, int db_type_len);
+  void write_to_db(caffenet_state* state, char* image, int label, int channels, int height, int width, char* key_str);
+  void commit_db_txn(caffenet_state* state);
+  void close_db(caffenet_state* state);
+
+  void save_mean_image(caffenet_state* state, float* mean_image, int channels, int height, int width, char* filename, int filename_len);
+
   caffenet_state* create_state();
   void destroy_state(caffenet_state* state);
 
@@ -59,6 +66,7 @@ extern "C" {
   void set_device(int gpu_id);
 
   void load_weights_from_file(caffenet_state* state, const char* filename);
+  void save_weights_to_file(caffenet_state* state, const char* filename);
   void restore_solver_from_file(caffenet_state* state, const char* filename);
 
   bool parse_net_prototxt(caffenet_state* state, const char* filename);

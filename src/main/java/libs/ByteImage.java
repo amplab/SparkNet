@@ -3,7 +3,7 @@ package libs;
 
 import java.awt.image.BufferedImage;
 
-public class ByteImage {
+public class ByteImage implements java.io.Serializable {
   private byte[] red;
   private byte[] green;
   private byte[] blue;
@@ -72,6 +72,15 @@ public class ByteImage {
     red = new byte[width * height];
     green = new byte[width * height];
     blue = new byte[width * height];
+  }
+
+  public void copyToBuffer(byte[] buffer) {
+    assert(3 * height * width == buffer.length);
+    for (int i = 0; i < width * height; i++) {
+      buffer[0 * height * width + i] = red[i];
+      buffer[1 * height * width + i] = green[i];
+      buffer[2 * height * width + i] = blue[i];
+    }
   }
 
   public void cropInto(float[] buffer, int[] lowerOffsets, int[] upperOffsets) {

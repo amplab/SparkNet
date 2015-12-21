@@ -19,6 +19,14 @@ public interface CaffeLibrary extends Library {
   int get_int_size();
   int get_dtype_size();
 
+  void create_db(Pointer state, String db_name, int name_len, String db_type, int db_type_len);
+  void write_to_db(Pointer state, byte[] image, int label, int channels, int height, int width, String key_str);
+  void commit_db_txn(Pointer state);
+  void close_db(Pointer state);
+  byte[] image_to_datum(byte[] image, int label, int height, int width);
+
+  void save_mean_image(Pointer state, float[] mean_image, int channels, int height, int width, String filename, int filename_len);
+
   Pointer create_state();
   void destroy_state(Pointer state);
 
@@ -57,6 +65,7 @@ public interface CaffeLibrary extends Library {
   void set_device(int gpu_id);
 
   void load_weights_from_file(Pointer state, String filename);
+  void save_weights_to_file(Pointer state, String filename);
   void restore_solver_from_file(Pointer state, String filename);
 
   boolean parse_net_prototxt(Pointer state, String filename);

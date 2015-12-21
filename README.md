@@ -34,6 +34,8 @@ Dependencies:
 
 1. sbt 0.13 - [installation instructions](http://www.scala-sbt.org/0.13/tutorial/Installing-sbt-on-Linux.html)
 2. cuda 7.0 - [installation instructions](http://docs.nvidia.com/cuda/cuda-getting-started-guide-for-linux/#axzz3sjNgyLGA)
+3. lmdb - `apt-get install liblmdb-dev` (optional, only if you want to use LMDB)
+4. leveldb - `apt-get install libleveldb-dev` (optional, only if you want to use LevelDB)
 
 ### Setup
 
