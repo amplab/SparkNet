@@ -27,7 +27,7 @@ extern "C" {
   caffenet_state* create_state();
   void destroy_state(caffenet_state* state);
 
-  void load_solver_from_protobuf(caffenet_state* state, const char* solver_param, int solver_param_len);
+  void load_solver_from_protobuf(caffenet_state* state, const char* solver_param, int solver_param_len, int num_gpus);
   void load_net_from_protobuf(caffenet_state* state, const char* net_param, int net_param_len);
 
   // TODO: Write documentation for these methods (in particular the layer index)

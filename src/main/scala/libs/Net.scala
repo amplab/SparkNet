@@ -76,6 +76,10 @@ class CaffeNet(state: Pointer, caffeLib: CaffeLibrary) extends Net {
 
   var numTestBatches = None: Option[Int]
 
+  def getState(): Pointer = {
+    return state
+  }
+
   def setTrainData(minibatchSampler: MinibatchSampler, trainPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None) = {
     imageTrainCallback = Some(makeImageCallback(minibatchSampler, trainPreprocessing))
     labelTrainCallback = Some(makeLabelCallback(minibatchSampler))
@@ -217,13 +221,13 @@ class CaffeNet(state: Pointer, caffeLib: CaffeLibrary) extends Net {
 }
 
 object CaffeNet {
-  def apply(caffeLib: CaffeLibrary, solverParameter: SolverParameter): CaffeNet = {
+  def apply(caffeLib: CaffeLibrary, solverParameter: SolverParameter, numGPUs: Int = 1): CaffeNet = {
     val caffeLib = CaffeLibrary.INSTANCE
     val state = caffeLib.create_state()
     val byteArr = solverParameter.toByteArray()
     val ptr = new Memory(byteArr.length)
     ptr.write(0, byteArr, 0, byteArr.length)
-    caffeLib.load_solver_from_protobuf(state, ptr, byteArr.length)
+    caffeLib.load_solver_from_protobuf(state, ptr, byteArr.length, numGPUs)
     return new CaffeNet(state, caffeLib)
   }
 }
