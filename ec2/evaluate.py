@@ -31,4 +31,4 @@ accuracy /= test_iters
 print 'Accuracy:', accuracy
 
 with open("/imagenet2/multigpu-acc.txt", "a") as myfile:
-    myfile.write(str() + ',' + str(accuracy) + '\n')
+    myfile.write(str(args.index) + ',' + str(accuracy) + '\n')
