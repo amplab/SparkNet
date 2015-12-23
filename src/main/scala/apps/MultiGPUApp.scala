@@ -58,14 +58,14 @@ object MultiGPUApp {
       // save weights:
       if (i % 10 == 0) {
         net.setWeights(netWeights)
-        net.saveWeightsToFile("/imgnet/params/" + "%09d".format(i * syncInterval) + ".caffemodel")
+        net.saveWeightsToFile("/root/weights/" + "%09d".format(i * syncInterval) + ".caffemodel")
       }
 
-      workers.foreach(_ => net.setWeights(broadcastWeights.value))
+      workers.foreach(_ => workerStore.getNet("net").setWeights(broadcastWeights.value))
 
-      workers.foreachPartition(_ => net.train(syncInterval))
+      workers.foreachPartition(_ => workerStore.getNet("net").train(syncInterval))
 
-      netWeights = workers.map(_ => net.getWeights()).reduce((a, b) => WeightCollection.add(a, b))
+      netWeights = workers.map(_ => workerStore.getNet("net").getWeights()).reduce((a, b) => WeightCollection.add(a, b))
       netWeights.scalarDivide(1F * numWorkers)
 
       // save weights:
