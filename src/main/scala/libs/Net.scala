@@ -76,10 +76,6 @@ class CaffeNet(state: Pointer, caffeLib: CaffeLibrary) extends Net {
 
   var numTestBatches = None: Option[Int]
 
-  def getState(): Pointer = {
-    return state
-  }
-
   def setTrainData(minibatchSampler: MinibatchSampler, trainPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None) = {
     imageTrainCallback = Some(makeImageCallback(minibatchSampler, trainPreprocessing))
     labelTrainCallback = Some(makeLabelCallback(minibatchSampler))

@@ -9,14 +9,7 @@ import loaders._
 import preprocessing._
 
 object MultiGPUApp {
-  // initialize nets on workers
-  val sparkNetHome = "/root/SparkNet"
-  System.load(sparkNetHome + "/build/libccaffe.so")
-	val caffeLib = CaffeLibrary.INSTANCE
-	caffeLib.set_basepath(sparkNetHome + "/caffe/")
-  var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_googlenet/train_val.prototxt")
-  val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_googlenet/quick_solver.prototxt", netParameter, None)
-  val net = CaffeNet(caffeLib, solverParameter, 4) // TODO: Fix 1 not working here
+  val workerStore = new WorkerStore()
 
   def main(args: Array[String]) {
     val numWorkers = args(0).toInt
@@ -29,13 +22,32 @@ object MultiGPUApp {
 
     val sparkNetHome = sys.env("SPARKNET_HOME")
 
-    val state = net.getState()
-    caffeLib.load_weights_from_file(state, "/imgnet/params/initialization.caffemodel")
-
-    var netWeights = net.getWeights()
     val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
 
+    // initialize nets on workers
+    workers.foreach(_ => {
+      System.load(sparkNetHome + "/build/libccaffe.so")
+      val caffeLib = CaffeLibrary.INSTANCE
+      caffeLib.set_basepath(sparkNetHome + "/caffe/")
+      workerStore.setLib(caffeLib)
+      var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_googlenet/train_val.prototxt")
+      val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_googlenet/quick_solver.prototxt", netParameter, None)
+      val net = CaffeNet(caffeLib, solverParameter, 4)
+      workerStore.setNet("net", net)
+    })
+
+    // initialize net on master
+    System.load(sparkNetHome + "/build/libccaffe.so")
+    val caffeLib = CaffeLibrary.INSTANCE
+    caffeLib.set_basepath(sparkNetHome + "/caffe/")
+    var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_googlenet/train_val.prototxt")
+    val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_googlenet/quick_solver.prototxt", netParameter, None)
+    val net = CaffeNet(caffeLib, solverParameter, 4)
+
+    var netWeights = net.getWeights()
+
     var i = 0
+    val syncInterval = 50
     while (true) {
       val broadcastWeights = sc.broadcast(netWeights)
 
@@ -44,31 +56,25 @@ object MultiGPUApp {
       // non-alcoholic drink of your choice) for whomever finds the problem.
 
       // save weights:
-      if (i % 500 == 0) {
+      if (i % 10 == 0) {
         net.setWeights(netWeights)
-        caffeLib.save_weights_to_file(state, "/imgnet/params/" + "%09d".format(i) + ".caffemodel")
+        net.saveWeightsToFile("/imgnet/params/" + "%09d".format(i * syncInterval) + ".caffemodel")
       }
 
       workers.foreach(_ => net.setWeights(broadcastWeights.value))
 
-      val syncInterval = 50
-      workers.foreachPartition(
-        _ => {
-          net.train(syncInterval)
-          ()
-        }
-      )
+      workers.foreachPartition(_ => net.train(syncInterval))
 
       netWeights = workers.map(_ => net.getWeights()).reduce((a, b) => WeightCollection.add(a, b))
       netWeights.scalarDivide(1F * numWorkers)
 
       // save weights:
-      if (i % 500 == 0) {
+      if (i % 10 == 0) {
         net.setWeights(netWeights)
-        caffeLib.save_weights_to_file(state, "/imgnet/params/" + "%09d".format(i) + ".caffemodel")
+        net.saveWeightsToFile("/imgnet/params/" + "%09d".format(i * syncInterval) + ".caffemodel")
       }
 
-      i += 50
+      i += 1
     }
   }
 }
