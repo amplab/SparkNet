@@ -2,9 +2,14 @@
 
 import caffe
 
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("index", type=int)
+args = parser.parse_args()
+
 caffe_root = '/root/caffe/'
 
-model = '/imagenet2/multigpu/multigpu-0.caffemodel'
+model = '/imagenet2/multigpu/multigpu-" + args.index + ".caffemodel'
 
 caffe.set_mode_gpu()
 caffe.set_device(1)
@@ -25,5 +30,5 @@ accuracy /= test_iters
 
 print 'Accuracy:', accuracy
 
-import IPython
-IPython.embed()
+with open("/imagnet2/multigpu-acc.txt", "a") as myfile:
+    myfile.write(str() + ',' + str(accuracy) + '\n')
