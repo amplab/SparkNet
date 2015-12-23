@@ -16,7 +16,7 @@ net = caffe.Net(caffe_root + 'models/bvlc_googlenet/train_val.prototxt',
 test_iters = 1000
 accuracy = 0
 
-for it in arange(test_iters):
+for it in range(test_iters):
     net.forward()
     accuracy += net.blobs['loss1/top-5'].data
 
