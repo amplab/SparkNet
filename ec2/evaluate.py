@@ -9,7 +9,7 @@ args = parser.parse_args()
 
 caffe_root = '/root/caffe/'
 
-model = '/imagenet2/multigpu/multigpu-' + args.index + '.caffemodel'
+model = '/imagenet2/multigpu/multigpu-' + str(args.index) + '.caffemodel'
 
 caffe.set_mode_gpu()
 caffe.set_device(1)
