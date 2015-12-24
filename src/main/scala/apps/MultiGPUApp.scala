@@ -71,7 +71,7 @@ object MultiGPUApp {
       // save weights:
       if (i % 10 == 0) {
         net.setWeights(netWeights)
-        net.saveWeightsToFile("/imgnet/params/" + "%09d".format(i * syncInterval) + ".caffemodel")
+        net.saveWeightsToFile("/root/weights/" + "%09d".format(i * syncInterval) + ".caffemodel2")
       }
 
       i += 1
