@@ -92,7 +92,9 @@ object MultiGPUApp {
         net.setWeights(netWeights)
         net.saveWeightsToFile("/root/weights/" + "%09d".format(i * syncInterval) + ".caffemodel")
         net.setNumTestBatches(numTestBatches)
+        log("start testing", i)
         testAccuracy = Some(Future { net.test() }) // start testing asynchronously
+        log("let testing run in background", i)
       }
 
       workers.foreach(_ => workerStore.getNet("net").setWeights(broadcastWeights.value))
