@@ -12,7 +12,7 @@ import loaders._
 import preprocessing._
 
 object ImageNetCreateDBApp {
-  val trainBatchSize = 256
+  val trainBatchSize = 256 // 256 for AlexNet, 32 for GoogleNet
   val testBatchSize = 50
   val channels = 3
   val fullWidth = 256
