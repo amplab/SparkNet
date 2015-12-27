@@ -1,8 +1,16 @@
 package apps
 
+import java.io._
+import org.apache.commons.io.FileUtils
+import scala.io.Source
+
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 import org.apache.spark.storage.StorageLevel
+
+import scala.concurrent._
+import ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 import libs._
 import loaders._
@@ -21,6 +29,19 @@ object MultiGPUApp {
     val sc = new SparkContext(conf)
 
     val sparkNetHome = sys.env("SPARKNET_HOME")
+
+    // information for logging
+    val startTime = System.currentTimeMillis()
+    val trainingLog = new PrintWriter(new File(sparkNetHome + "/training_log_" + startTime.toString + ".txt" ))
+    def log(message: String, i: Int = -1) {
+      val elapsedTime = 1F * (System.currentTimeMillis() - startTime) / 1000
+      if (i == -1) {
+        trainingLog.write(elapsedTime.toString + ": "  + message + "\n")
+      } else {
+        trainingLog.write(elapsedTime.toString + ", i = " + i.toString + ": "+ message + "\n")
+      }
+      trainingLog.flush()
+    }
 
     val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
 
@@ -46,6 +67,13 @@ object MultiGPUApp {
 
     var netWeights = net.getWeights()
 
+    val testPartitionSizesFilename = sparkNetHome + "/infoFiles/imagenet_num_test_batches.txt"
+    val numTestBatches = workers.map(_ => {
+      Source.fromFile(testPartitionSizesFilename).getLines.mkString.toInt
+    }).sum().toInt
+    log("numTestBatches = " + numTestBatches.toString)
+    var testAccuracy = None: Option[Future[Array[Float]]]
+
     var i = 0
     val syncInterval = 50
     while (true) {
@@ -57,8 +85,14 @@ object MultiGPUApp {
 
       // save weights:
       if (i % 10 == 0) {
+        if (!testAccuracy.isEmpty) {
+          val accuracy = Await.result(testAccuracy.get, Duration.Inf)(0) // wait until testing finishes
+          log("%.2f".format(accuracy) + "% accuracy", i - 10) // report the previous testing result
+        }
         net.setWeights(netWeights)
         net.saveWeightsToFile("/root/weights/" + "%09d".format(i * syncInterval) + ".caffemodel")
+        net.setNumTestBatches(numTestBatches)
+        testAccuracy = Some(Future { net.test() }) // start testing asynchronously
       }
 
       workers.foreach(_ => workerStore.getNet("net").setWeights(broadcastWeights.value))

@@ -26,6 +26,7 @@ object ImageNetCreateDBApp {
 
   def main(args: Array[String]) {
     val numWorkers = args(0).toInt
+    val writeTestToMaster = args(1).toInt // 0 means write the DB on the workers, 1 means write the DB on the master
     val conf = new SparkConf()
       .setAppName("ImageNetCreateDB")
       .set("spark.driver.maxResultSize", "30G")
@@ -112,12 +113,17 @@ object ImageNetCreateDBApp {
     }).foreach(_ => ())
 
     log("write test data to DB")
-    testMinibatchRDD.mapPartitions(minibatchIt => {
-      FileUtils.deleteDirectory(new File(testDBFilename))
-      val DBCreator = new CreateDB(workerStore.getLib, "leveldb")
-      DBCreator.makeDBFromMinibatchPartition(minibatchIt, testDBFilename, fullHeight, fullWidth)
-      Array(0).iterator
-    }).foreach(_ => ())
+    if (writeTestToMaster == 0) { // write DB to workers
+      testMinibatchRDD.mapPartitions(minibatchIt => {
+        FileUtils.deleteDirectory(new File(testDBFilename))
+        val DBCreator = new CreateDB(workerStore.getLib, "leveldb")
+        DBCreator.makeDBFromMinibatchPartition(minibatchIt, testDBFilename, fullHeight, fullWidth)
+        Array(0).iterator
+      }).foreach(_ => ())
+    } else { // write DB to master
+      val DBCreator = new CreateDB(caffeLib, "leveldb")
+      DBCreator.makeDBFromMinibatchPartition(testMinibatchRDD.collect().iterator, testDBFilename, fullHeight, fullWidth)
+    }
 
     log("computing mean image")
     val meanImage = ComputeMean.computeMeanFromMinibatches(trainMinibatchRDD, fullImShape, numTrainData.toInt)
