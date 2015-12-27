@@ -31,8 +31,6 @@ object ImageNetCreateDBApp {
       .setAppName("ImageNetCreateDB")
       .set("spark.driver.maxResultSize", "30G")
       .set("spark.task.maxFailures", "1")
-      .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-      .set("spark.kryoserializer.buffer.max", "12g")
     val sc = new SparkContext(conf)
 
     val sparkNetHome = sys.env("SPARKNET_HOME")
@@ -123,8 +121,15 @@ object ImageNetCreateDBApp {
         Array(0).iterator
       }).foreach(_ => ())
     } else { // write DB to master
-      val DBCreator = new CreateDB(caffeLib, "leveldb")
-      DBCreator.makeDBFromMinibatchPartition(testMinibatchRDD.collect().iterator, testDBFilename, fullHeight, fullWidth)
+      testMinibatchRDD = testMinibatchRDD.coalesce(1)
+      testMinibatchRDD.mapPartitions(minibatchIt => {
+        FileUtils.deleteDirectory(new File(testDBFilename))
+        val DBCreator = new CreateDB(workerStore.getLib, "leveldb")
+        DBCreator.makeDBFromMinibatchPartition(minibatchIt, testDBFilename, fullHeight, fullWidth)
+        Array(0).iterator
+      }).foreach(_ => ())
+      // val DBCreator = new CreateDB(caffeLib, "leveldb")
+      // DBCreator.makeDBFromMinibatchPartition(testMinibatchRDD.collect().iterator, testDBFilename, fullHeight, fullWidth)
     }
 
     log("computing mean image")
