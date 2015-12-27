@@ -124,15 +124,17 @@ object ImageNetCreateDBApp {
 
     if (writeTestToMaster == 1) { // save DB to master
       log("save full test DB to master")
-      // testMinibatchRDD = testMinibatchRDD.coalesce(1)
-      // testMinibatchRDD.mapPartitions(minibatchIt => {
-      //   FileUtils.deleteDirectory(new File(testDBFilename))
-      //   val DBCreator = new CreateDB(workerStore.getLib, "leveldb")
-      //   DBCreator.makeDBFromMinibatchPartition(minibatchIt, testDBFilename, fullHeight, fullWidth)
-      //   Array(0).iterator
-      // }).foreach(_ => ())
+      testMinibatchRDD = testMinibatchRDD.coalesce(1)
+      testMinibatchRDD.mapPartitions(minibatchIt => {
+        FileUtils.deleteDirectory(new File(testDBFilename))
+        val DBCreator = new CreateDB(workerStore.getLib, "leveldb")
+        DBCreator.makeDBFromMinibatchPartition(minibatchIt, testDBFilename, fullHeight, fullWidth)
+        Array(0).iterator
+      }).foreach(_ => ())
+      /*
       val DBCreator = new CreateDB(caffeLib, "leveldb")
       DBCreator.makeDBFromMinibatchPartition(testMinibatchRDD.collect().iterator, testDBFilename, fullHeight, fullWidth)
+      */
     }
 
     if (writeSmallTrainDBToMaster == 1) {
