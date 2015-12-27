@@ -115,14 +115,15 @@ object ImageNetCreateDBApp {
     }).foreach(_ => ())
 
     log("write test data to DB")
-    if (writeTestToMaster == 0) { // write DB to workers
-      testMinibatchRDD.mapPartitions(minibatchIt => {
-        FileUtils.deleteDirectory(new File(testDBFilename))
-        val DBCreator = new CreateDB(workerStore.getLib, "leveldb")
-        DBCreator.makeDBFromMinibatchPartition(minibatchIt, testDBFilename, fullHeight, fullWidth)
-        Array(0).iterator
-      }).foreach(_ => ())
-    } else { // write DB to master
+    testMinibatchRDD.mapPartitions(minibatchIt => {
+      FileUtils.deleteDirectory(new File(testDBFilename))
+      val DBCreator = new CreateDB(workerStore.getLib, "leveldb")
+      DBCreator.makeDBFromMinibatchPartition(minibatchIt, testDBFilename, fullHeight, fullWidth)
+      Array(0).iterator
+    }).foreach(_ => ())
+
+    if (writeTestToMaster == 1) { // save DB to master
+      log("save full test DB to master")
       // testMinibatchRDD = testMinibatchRDD.coalesce(1)
       // testMinibatchRDD.mapPartitions(minibatchIt => {
       //   FileUtils.deleteDirectory(new File(testDBFilename))
@@ -135,12 +136,14 @@ object ImageNetCreateDBApp {
     }
 
     if (writeSmallTrainDBToMaster == 1) {
+      log("save minimal train DB to master")
       FileUtils.deleteDirectory(new File(trainDBFilename))
       val DBCreator = new CreateDB(caffeLib, "leveldb")
       DBCreator.makeDBFromMinibatchPartition(trainMinibatchRDD.takeSample(false, 1).iterator, trainDBFilename, fullHeight, fullWidth)
     }
 
     if (writeSmallTestDBToMaster == 1) {
+      log("save minimal test DB to master")
       FileUtils.deleteDirectory(new File(testDBFilename))
       val DBCreator = new CreateDB(caffeLib, "leveldb")
       DBCreator.makeDBFromMinibatchPartition(testMinibatchRDD.takeSample(false, 1).iterator, testDBFilename, fullHeight, fullWidth)
