@@ -90,7 +90,7 @@ object MultiGPUApp {
         if (!testAccuracy.isEmpty) {
           val testScores = Await.result(testAccuracy.get, Duration.Inf) // wait until testing finishes
           log("testScores = " + testScores.deep.toString, i)
-          val accuracy = 100F * testScores(0) / numTestBatches
+          val accuracy = 100F * testScores(1) / numTestBatches // testScores(1) for GoogleNet and testScores(0) for AlexNet
           log("%.2f".format(accuracy) + "% accuracy", i - 10) // report the previous testing result
         }
         net.setWeights(netWeights)
