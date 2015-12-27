@@ -64,6 +64,7 @@ object MultiGPUApp {
     var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_googlenet/train_val.prototxt")
     val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_googlenet/quick_solver.prototxt", netParameter, None)
     val net = CaffeNet(caffeLib, solverParameter, 4)
+    net.loadWeightsFromFile(sparkNetHome + "/caffe/examples/imagenet/singlegpu_4000_init.caffemodel")
 
     var netWeights = net.getWeights()
 
