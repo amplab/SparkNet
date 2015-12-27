@@ -88,7 +88,9 @@ object MultiGPUApp {
       // save weights:
       if (i % 10 == 0) {
         if (!testAccuracy.isEmpty) {
-          val accuracy = Await.result(testAccuracy.get, Duration.Inf)(0) // wait until testing finishes
+          val testScores = Await.result(testAccuracy.get, Duration.Inf) // wait until testing finishes
+          log("testScores = " + testScores.deep.toString, i)
+          val accuracy = 100F * testScores(0) / numTestBatches)
           log("%.2f".format(accuracy) + "% accuracy", i - 10) // report the previous testing result
         }
         net.setWeights(netWeights)
