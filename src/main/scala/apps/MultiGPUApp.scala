@@ -45,7 +45,7 @@ object MultiGPUApp {
 
     val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
 
-    // initialize nets on workers
+    log("initialize nets on workers")
     workers.foreach(_ => {
       System.load(sparkNetHome + "/build/libccaffe.so")
       val caffeLib = CaffeLibrary.INSTANCE
@@ -78,6 +78,7 @@ object MultiGPUApp {
     var i = 0
     val syncInterval = 50
     while (true) {
+      log("broadcasting weights", i)
       val broadcastWeights = sc.broadcast(netWeights)
 
       // TODO(pcmoritz): Currently, the weights are only updated/saved correctly
@@ -98,10 +99,13 @@ object MultiGPUApp {
         log("let testing run in background", i)
       }
 
+      log("setting weights on workers", i)
       workers.foreach(_ => workerStore.getNet("net").setWeights(broadcastWeights.value))
 
+      log("training", i)
       workers.foreachPartition(_ => workerStore.getNet("net").train(syncInterval))
 
+      log("collecting weights", i)
       netWeights = workers.map(_ => workerStore.getNet("net").getWeights()).reduce((a, b) => WeightCollection.add(a, b))
       netWeights.scalarDivide(1F * numWorkers)
 
@@ -113,5 +117,7 @@ object MultiGPUApp {
 
       i += 1
     }
+
+    log("finished training")
   }
 }
