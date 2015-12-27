@@ -31,6 +31,7 @@ object ImageNetCreateDBApp {
       .setAppName("ImageNetCreateDB")
       .set("spark.driver.maxResultSize", "30G")
       .set("spark.task.maxFailures", "1")
+      .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
     val sc = new SparkContext(conf)
 
     val sparkNetHome = sys.env("SPARKNET_HOME")
