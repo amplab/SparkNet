@@ -26,7 +26,9 @@ object ImageNetCreateDBApp {
 
   def main(args: Array[String]) {
     val numWorkers = args(0).toInt
-    val writeTestToMaster = args(1).toInt // 0 means write the DB on the workers, 1 means write the DB on the master
+    val writeTestToMaster = args(1).toInt // 1 means save test DB on the master, 0 means partition it among the workers
+    val writeSmallTrainDBToMaster = args(2).toInt // 1 means save a small train DB (not to be used) on the master, 0 means don't
+    val writeSmallTestDBToMaster = args(3).toInt // 1 means save a small test DB (not to be used) on the master, 0 means don't
     val conf = new SparkConf()
       .setAppName("ImageNetCreateDB")
       .set("spark.driver.maxResultSize", "30G")
@@ -121,15 +123,27 @@ object ImageNetCreateDBApp {
         Array(0).iterator
       }).foreach(_ => ())
     } else { // write DB to master
-      testMinibatchRDD = testMinibatchRDD.coalesce(1)
-      testMinibatchRDD.mapPartitions(minibatchIt => {
-        FileUtils.deleteDirectory(new File(testDBFilename))
-        val DBCreator = new CreateDB(workerStore.getLib, "leveldb")
-        DBCreator.makeDBFromMinibatchPartition(minibatchIt, testDBFilename, fullHeight, fullWidth)
-        Array(0).iterator
-      }).foreach(_ => ())
-      // val DBCreator = new CreateDB(caffeLib, "leveldb")
-      // DBCreator.makeDBFromMinibatchPartition(testMinibatchRDD.collect().iterator, testDBFilename, fullHeight, fullWidth)
+      // testMinibatchRDD = testMinibatchRDD.coalesce(1)
+      // testMinibatchRDD.mapPartitions(minibatchIt => {
+      //   FileUtils.deleteDirectory(new File(testDBFilename))
+      //   val DBCreator = new CreateDB(workerStore.getLib, "leveldb")
+      //   DBCreator.makeDBFromMinibatchPartition(minibatchIt, testDBFilename, fullHeight, fullWidth)
+      //   Array(0).iterator
+      // }).foreach(_ => ())
+      val DBCreator = new CreateDB(caffeLib, "leveldb")
+      DBCreator.makeDBFromMinibatchPartition(testMinibatchRDD.collect().iterator, testDBFilename, fullHeight, fullWidth)
+    }
+
+    if (writeSmallTrainDBToMaster == 1) {
+      FileUtils.deleteDirectory(new File(trainDBFilename))
+      val DBCreator = new CreateDB(caffeLib, "leveldb")
+      DBCreator.makeDBFromMinibatchPartition(trainMinibatchRDD.takeSample(false, 1).iterator, trainDBFilename, fullHeight, fullWidth)
+    }
+
+    if (writeSmallTestDBToMaster == 1) {
+      FileUtils.deleteDirectory(new File(testDBFilename))
+      val DBCreator = new CreateDB(caffeLib, "leveldb")
+      DBCreator.makeDBFromMinibatchPartition(testMinibatchRDD.takeSample(false, 1).iterator, testDBFilename, fullHeight, fullWidth)
     }
 
     log("computing mean image")
