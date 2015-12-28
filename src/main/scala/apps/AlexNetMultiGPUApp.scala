@@ -53,7 +53,7 @@ object AlexNetMultiGPUApp {
       caffeLib.set_basepath(sparkNetHome + "/caffe/")
       workerStore.setLib(caffeLib)
       var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/train_val.prototxt")
-      val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/quick_solver.prototxt", netParameter, None)
+      val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/solver.prototxt", netParameter, None)
       val net = CaffeNet(caffeLib, solverParameter, numGPUs)
       workerStore.setNet("net", net)
     })
@@ -63,7 +63,7 @@ object AlexNetMultiGPUApp {
     val caffeLib = CaffeLibrary.INSTANCE
     caffeLib.set_basepath(sparkNetHome + "/caffe/")
     var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/train_val.prototxt")
-    val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/quick_solver.prototxt", netParameter, None)
+    val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/solver.prototxt", netParameter, None)
     val net = CaffeNet(caffeLib, solverParameter, numGPUs)
     net.loadWeightsFromFile(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/caffenet_train_iter_500.caffemodel")
 
