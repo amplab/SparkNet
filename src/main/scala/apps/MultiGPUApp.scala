@@ -21,6 +21,7 @@ object MultiGPUApp {
 
   def main(args: Array[String]) {
     val numWorkers = args(0).toInt
+    val numGPUs = args(1).toInt
     val conf = new SparkConf()
       .setAppName("ImageNet")
       .set("spark.driver.maxResultSize", "30G")
@@ -53,7 +54,7 @@ object MultiGPUApp {
       workerStore.setLib(caffeLib)
       var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_googlenet/train_val.prototxt")
       val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_googlenet/quick_solver.prototxt", netParameter, None)
-      val net = CaffeNet(caffeLib, solverParameter, 4)
+      val net = CaffeNet(caffeLib, solverParameter, numGPUs)
       workerStore.setNet("net", net)
     })
 
@@ -63,7 +64,7 @@ object MultiGPUApp {
     caffeLib.set_basepath(sparkNetHome + "/caffe/")
     var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_googlenet/train_val.prototxt")
     val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_googlenet/quick_solver.prototxt", netParameter, None)
-    val net = CaffeNet(caffeLib, solverParameter, 4)
+    val net = CaffeNet(caffeLib, solverParameter, numGPUs)
     net.loadWeightsFromFile(sparkNetHome + "/caffe/examples/imagenet/singlegpu_4000_init.caffemodel")
 
     var netWeights = net.getWeights()
