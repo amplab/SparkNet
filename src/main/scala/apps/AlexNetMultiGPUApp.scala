@@ -16,14 +16,14 @@ import libs._
 import loaders._
 import preprocessing._
 
-object MultiGPUApp {
+object AlexNetMultiGPUApp {
   val workerStore = new WorkerStore()
 
   def main(args: Array[String]) {
     val numWorkers = args(0).toInt
     val numGPUs = args(1).toInt
     val conf = new SparkConf()
-      .setAppName("ImageNet")
+      .setAppName("AlexNetMultiGPUApp")
       .set("spark.driver.maxResultSize", "30G")
       .set("spark.task.maxFailures", "1")
       .set("spark.eventLog.enabled", "true")
@@ -52,8 +52,8 @@ object MultiGPUApp {
       val caffeLib = CaffeLibrary.INSTANCE
       caffeLib.set_basepath(sparkNetHome + "/caffe/")
       workerStore.setLib(caffeLib)
-      var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_googlenet/train_val.prototxt")
-      val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_googlenet/quick_solver.prototxt", netParameter, None)
+      var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/train_val.prototxt")
+      val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/quick_solver.prototxt", netParameter, None)
       val net = CaffeNet(caffeLib, solverParameter, numGPUs)
       workerStore.setNet("net", net)
     })
@@ -62,10 +62,10 @@ object MultiGPUApp {
     System.load(sparkNetHome + "/build/libccaffe.so")
     val caffeLib = CaffeLibrary.INSTANCE
     caffeLib.set_basepath(sparkNetHome + "/caffe/")
-    var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_googlenet/train_val.prototxt")
-    val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_googlenet/quick_solver.prototxt", netParameter, None)
+    var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/train_val.prototxt")
+    val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/quick_solver.prototxt", netParameter, None)
     val net = CaffeNet(caffeLib, solverParameter, numGPUs)
-    net.loadWeightsFromFile(sparkNetHome + "/caffe/examples/imagenet/singlegpu_4000_init.caffemodel")
+    net.loadWeightsFromFile(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/caffenet_train_iter_500.caffemodel")
 
     var netWeights = net.getWeights()
 
@@ -91,7 +91,7 @@ object MultiGPUApp {
         if (!testAccuracy.isEmpty) {
           val testScores = Await.result(testAccuracy.get, Duration.Inf) // wait until testing finishes
           log("testScores = " + testScores.deep.toString, i)
-          val accuracy = 100F * testScores(1) / numTestBatches // testScores(1) for GoogleNet and testScores(0) for AlexNet
+          val accuracy = 100F * testScores(0) / numTestBatches // testScores(1) for GoogleNet and testScores(0) for AlexNet
           log("%.2f".format(accuracy) + "% accuracy", i - 10) // report the previous testing result
         }
         net.setWeights(netWeights)

@@ -16,14 +16,14 @@ import libs._
 import loaders._
 import preprocessing._
 
-object MultiGPUApp {
+object GoogleNetMultiGPUApp {
   val workerStore = new WorkerStore()
 
   def main(args: Array[String]) {
     val numWorkers = args(0).toInt
     val numGPUs = args(1).toInt
     val conf = new SparkConf()
-      .setAppName("ImageNet")
+      .setAppName("GoogleNetMultiGPU")
       .set("spark.driver.maxResultSize", "30G")
       .set("spark.task.maxFailures", "1")
       .set("spark.eventLog.enabled", "true")
