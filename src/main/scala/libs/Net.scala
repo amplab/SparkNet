@@ -1,6 +1,7 @@
 package libs
 
 import scala.util.Random
+import java.nio.file.{Paths, Files}
 
 import com.sun.jna.Pointer
 import com.sun.jna.Memory
@@ -203,6 +204,7 @@ class CaffeNet(state: Pointer, caffeLib: CaffeLibrary) extends Net {
   }
 
   def saveWeightsToFile(filename: String) {
+    assert(Files.exists(Paths.get(filename).getParent()), "attempted to save weights to directory " + Paths.get(filename).getParent().toString + " which does not exist")
     caffeLib.save_weights_to_file(state, filename)
   }
 
