@@ -43,6 +43,7 @@ object AlexNetMultiGPUApp {
       }
       trainingLog.flush()
     }
+    log("numWorkers = " + numWorkers.toString + ", numGPUs = " + numGPUs.toString)
 
     val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
 
