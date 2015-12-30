@@ -15,7 +15,7 @@ caffe_root = '/root/caffe/'
 model = args.prefix + str(args.index) + '.caffemodel'
 
 caffe.set_mode_gpu()
-caffe.set_device(1)
+caffe.set_device(0)
 
 net = caffe.Net(args.net, model, caffe.TEST)
 
