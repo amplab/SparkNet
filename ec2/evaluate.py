@@ -6,8 +6,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("index", type=int)
 parser.add_argument("net", type=str, help="path to the train_val.prototxt file")
-parser.add_argument("prefix", type=str)
-parser.add_argument("dir", type=str, help="directory where the model files are stored")
+parser.add_argument("prefix", type=str, help="prefix of the caffemodel files (see source code)")
 parser.add_argument("logfile", type=str, help="path where the resulting logfile will be stored")
 args = parser.parse_args()
 
