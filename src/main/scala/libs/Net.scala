@@ -55,6 +55,10 @@ trait Net {
 
   def test(): Array[Float]
 
+  def forward()
+
+  def backward()
+
   def setWeights(weights: WeightCollection)
 
   def getWeights(): WeightCollection
@@ -115,6 +119,16 @@ class CaffeNet(state: Pointer, caffeLib: CaffeLibrary) extends Net {
     //return Array(0)
   }
 
+  def forward() = {
+    caffeLib.set_mode_gpu()
+    caffeLib.forward(state)
+  }
+
+  def backward() = {
+    caffeLib.set_mode_gpu()
+    caffeLib.backward(state)
+  }
+
   def setWeights(allWeights: WeightCollection) = {
     assert(allWeights.numLayers == numLayers)
     for (i <- 0 to numLayers - 1) {
@@ -155,6 +169,26 @@ class CaffeNet(state: Pointer, caffeLib: CaffeLibrary) extends Net {
       allWeights += (layerNames(i) -> weightList)
     }
     return new WeightCollection(allWeights, layerNames)
+  }
+
+  def getData(): Map[String, NDArray] = {
+    val allData = Map[String, NDArray]()
+    val numData = caffeLib.num_data_blobs(state)
+    for (i <- 0 to numData - 1) {
+      val name = caffeLib.get_data_blob_name(state, i)
+      val blob = caffeLib.get_data_blob(state, i)
+      val shape = getShape(blob)
+      val data = new Array[Float](shape.product)
+      val blob_pointer = caffeLib.get_data(blob)
+      val size = shape.product
+      var t = 0
+      while (t < size) {
+        data(t) = blob_pointer.getFloat(dtypeSize * t)
+        t += 1
+      }
+      allData += (name -> NDArray(data, shape))
+    }
+    return allData
   }
 
   private def makeImageCallback(minibatchSampler: MinibatchSampler, preprocessing: Option[(ByteImage, Array[Float]) => Unit] = None): CaffeLibrary.java_callback_t = {
