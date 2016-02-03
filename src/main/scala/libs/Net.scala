@@ -106,7 +106,6 @@ class CaffeNet(state: Pointer, caffeLib: CaffeLibrary) extends Net {
 
   def test(): Array[Float] = {
     caffeLib.set_mode_gpu()
-    print("hey\n")
     assert(!numTestBatches.isEmpty)
     caffeLib.solver_test(state, numTestBatches.get) // you must run this before running caffeLib.num_test_scores(state)
     val numTestScores = caffeLib.num_test_scores(state)
