@@ -99,7 +99,7 @@ object CifarApp {
       workers.foreach(_ => workerStore.getNet("net").setWeights(broadcastWeights.value))
 
       if (i % 10 == 0) {
-        log("testing, i")
+        log("testing", i)
         val testScores = testPartitionSizes.zipPartitions(testMinibatchRDD) (
           (lenIt, testMinibatchIt) => {
             assert(lenIt.hasNext && testMinibatchIt.hasNext)
