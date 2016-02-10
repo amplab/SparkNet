@@ -86,18 +86,14 @@ To run CifarApp, do the following:
 To run ImageNet, do the following:
 
 1.  Obtain the ImageNet data by following the instructions [here](http://www.image-net.org/download-images). This involves creating an account and submitting a request.
-2. Put the training tar files on S3 at `s3://sparknet/ILSVRC2012_training`
-3. Tar the validation files by running
-
-        TODO
-and put them on S3 at `s3://sparknet/ILSVRC2012_val`
-4. On the master, create `~/.aws/credentials` with the following content:
+2. Put the training and test data on S3 (see instructions in this [issue](https://github.com/amplab/SparkNet/issues/59)).
+3. On the master, create `~/.aws/credentials` with the following content:
 
         [default]
         aws_access_key_id=
         aws_secret_access_key=
-5. Set the correct value of `sparkNetHome` in `src/main/scala/apps/ImageNetApp.scala`.
-6. Submit a job on the master with
+4. Set the correct value of `sparkNetHome` in `src/main/scala/apps/ImageNetApp.scala`.
+5. Submit a job on the master with
 
         spark-submit --class apps.ImageNetApp $SPARKNET_HOME/target/scala-2.10/sparknet-assembly-0.1-SNAPSHOT.jar n
 where `n` is the number of worker nodes in your Spark cluster.
