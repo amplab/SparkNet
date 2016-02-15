@@ -12,7 +12,7 @@ import loaders._
 import preprocessing._
 
 // to run this app, the ImageNet training and validation data must be located on
-// S3 at s3://sparknet/ILSVRC2012_training/ and s3://sparknet/ILSVRC2012_val/.
+// S3 at s3://sparknet/ILSVRC2012_img_train/ and s3://sparknet/ILSVRC2012_img_val/.
 // Performance is best if the uncompressed data can fit in memory. If it cannot
 // fit, you can replace persist() with persist(StorageLevel.MEMORY_AND_DISK).
 // However, spilling the RDDs to disk can cause training to be much slower.
@@ -31,6 +31,7 @@ object ImageNetApp {
 
   def main(args: Array[String]) {
     val numWorkers = args(0).toInt
+    val s3Bucket = args(1)
     val conf = new SparkConf()
       .setAppName("ImageNet")
       .set("spark.driver.maxResultSize", "30G")
@@ -52,11 +53,14 @@ object ImageNetApp {
       trainingLog.flush()
     }
 
-    val loader = new ImageNetLoader("sparknet")
+    val loader = new ImageNetLoader(s3Bucket)
     log("loading train data")
-    var trainRDD = loader.apply(sc, "ILSVRC2012_train/", "train.txt")
+    // var trainRDD = loader.apply(sc, "ILSVRC2012_img_train/", "train.txt") // selects all training tar files
+    // var trainRDD = loader.apply(sc, "ILSVRC2012_img_train/train.000", "train.txt") // selects training tar files whose filenames start with "train.000", this selects 100 out of 1000 tar files
+    var trainRDD = loader.apply(sc, "ILSVRC2012_img_train/train.0000", "train.txt") // selects training tar files whose filenames start with "train.0000", this selects 10 out of 1000 tar files
     log("loading test data")
-    val testRDD = loader.apply(sc, "ILSVRC2012_test/", "test.txt")
+    // val testRDD = loader.apply(sc, "ILSVRC2012_img_val/", "val.txt") // selects all validation tar files
+    val testRDD = loader.apply(sc, "ILSVRC2012_img_val/val.00", "val.txt") // selects validation tar files whose filenames start with "val.00", this selects 10 out of 50 tar files
 
     log("processing train data")
     val trainConverter = new ScaleAndConvert(trainBatchSize, fullHeight, fullWidth)
