@@ -22,7 +22,7 @@ class CifarSpec extends FlatSpec {
     val solver = ProtoLoader.loadSolverPrototxt(sparkNetHome + "/caffe/examples/cifar10/cifar10_full_java_solver.prototxt")
 
     val byteArr = solver.toByteArray()
-    val ptr = new Memory(byteArr.length);
+    val ptr = new Memory(byteArr.length)
     ptr.write(0, byteArr, 0, byteArr.length)
     caffeLib.load_solver_from_protobuf(state, ptr, byteArr.length)
 
@@ -49,7 +49,7 @@ class CifarSpec extends FlatSpec {
             }
           }
          }
-      };
+      }
     }
 
     def makeLabelCallback(labels: Array[Int]) : CaffeLibrary.java_callback_t =  {
@@ -65,7 +65,7 @@ class CifarSpec extends FlatSpec {
             }
           }
         }
-      };
+      }
     }
 
     val loadTrainImageFn = makeImageCallback(loader.trainImages)

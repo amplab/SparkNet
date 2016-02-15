@@ -63,8 +63,8 @@ class CifarLoader(path: String) {
   }
 
   def readBatch(file: File, batch: Int, images: Array[Array[Byte]], labels: Array[Int], perm: Vector[Int]) {
-    val buffer = new Array[Byte](1 + size);
-    val inputStream = new FileInputStream(file);
+    val buffer = new Array[Byte](1 + size)
+    val inputStream = new FileInputStream(file)
 
     var i = 0
     var nRead = inputStream.read(buffer)
