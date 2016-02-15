@@ -23,11 +23,21 @@ object CifarApp {
   val workerStore = new WorkerStore()
 
   def main(args: Array[String]) {
-    val numWorkers = args(0).toInt
     val conf = new SparkConf()
       .setAppName("Cifar")
       .set("spark.driver.maxResultSize", "5G")
       .set("spark.task.maxFailures", "1")
+    // Fetch generic options: they must precede program specific options
+    var startIx = 0
+    for (arg <- args if arg.startsWith("--")) {
+      if (arg.startsWith("--master=")) {
+        conf.setMaster(args(0).substring("--master=".length))
+        startIx += 1
+      } else {
+        System.err.println(s"Unknown generic option [$arg]")
+      }
+    }
+    val numWorkers = args(startIx).toInt
     val sc = new SparkContext(conf)
 
     val sparkNetHome = sys.env("SPARKNET_HOME")
