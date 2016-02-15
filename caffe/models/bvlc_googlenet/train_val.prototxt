@@ -15,9 +15,9 @@ layer {
     mean_value: 123
   }
   data_param {
-    source: "examples/imagenet/ilsvrc12_train_lmdb"
+    source: "examples/imagenet/ilsvrc12_train_db"
     batch_size: 32
-    backend: LMDB
+    backend: LEVELDB
   }
 }
 layer {
@@ -36,9 +36,9 @@ layer {
     mean_value: 123
   }
   data_param {
-    source: "examples/imagenet/ilsvrc12_val_lmdb"
+    source: "examples/imagenet/ilsvrc12_val_db"
     batch_size: 50
-    backend: LMDB
+    backend: LEVELDB
   }
 }
 layer {
