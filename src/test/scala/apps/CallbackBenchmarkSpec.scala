@@ -74,7 +74,7 @@ class CallbackBenchmarkSpec extends FlatSpec {
   log("before full callback")
 
   private def makeByteImageCallback(minibatch: Array[ByteImage], preprocessing: Option[(ByteImage, Array[Float]) => Unit] = None): CaffeLibrary.java_callback_t = {
-    new CaffeLibrary.java_callback_t() {
+    return new CaffeLibrary.java_callback_t() {
       def invoke(data: Pointer, batchSize: Int, numDims: Int, shape: Pointer) {
         var buffer = new Array[Float](227 * 227 * 3 * batchSize)
         for (j <- 0 to batchSize - 1) {

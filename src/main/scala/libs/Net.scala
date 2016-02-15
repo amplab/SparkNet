@@ -42,7 +42,7 @@ object WeightCollection extends java.io.Serializable {
         newWeights(layerNames(i)) += NDArray.plus(wc1.allWeights(layerNames(i))(j), wc2.allWeights(layerNames(i))(j))
       }
     }
-    new WeightCollection(newWeights, layerNames)
+    return new WeightCollection(newWeights, layerNames)
   }
 }
 
@@ -114,8 +114,8 @@ class CaffeNet(state: Pointer, caffeLib: CaffeLibrary) extends Net {
       testScores(i) = caffeLib.get_test_score(state, i) // for accuracy layers, this returns the average accuracy over a minibatch
     }
     print("testScores = " + testScores.deep.toString + "\n")
-    testScores
-    //Array(0)
+    return testScores
+    //return Array(0)
   }
 
   def forward() = {
@@ -167,7 +167,7 @@ class CaffeNet(state: Pointer, caffeLib: CaffeLibrary) extends Net {
       }
       allWeights += (layerNames(i) -> weightList)
     }
-    new WeightCollection(allWeights, layerNames)
+    return new WeightCollection(allWeights, layerNames)
   }
 
   def getData(): Map[String, NDArray] = {
@@ -187,11 +187,11 @@ class CaffeNet(state: Pointer, caffeLib: CaffeLibrary) extends Net {
       }
       allData += (name -> NDArray(data, shape))
     }
-    allData
+    return allData
   }
 
   private def makeImageCallback(minibatchSampler: MinibatchSampler, preprocessing: Option[(ByteImage, Array[Float]) => Unit] = None): CaffeLibrary.java_callback_t = {
-    new CaffeLibrary.java_callback_t() {
+    return new CaffeLibrary.java_callback_t() {
       def invoke(data: Pointer, batchSize: Int, numDims: Int, shape: Pointer) {
         val currentImageBatch = minibatchSampler.nextImageMinibatch()
         assert(currentImageBatch.length == batchSize)
@@ -220,7 +220,7 @@ class CaffeNet(state: Pointer, caffeLib: CaffeLibrary) extends Net {
   }
 
   def makeLabelCallback(minibatchSampler: MinibatchSampler): CaffeLibrary.java_callback_t = {
-    new CaffeLibrary.java_callback_t {
+    return new CaffeLibrary.java_callback_t {
       def invoke(data: Pointer, batchSize: Int, numDims: Int, shape: Pointer) {
         val currentLabelBatch = minibatchSampler.nextLabelMinibatch()
         assert(currentLabelBatch.length == batchSize)
@@ -245,7 +245,7 @@ class CaffeNet(state: Pointer, caffeLib: CaffeLibrary) extends Net {
     for (k <- 0 to numAxes - 1) {
       shape(k) = caffeLib.get_axis_shape(blob, k)
     }
-    shape
+    return shape
   }
 }
 
@@ -257,6 +257,6 @@ object CaffeNet {
     val ptr = new Memory(byteArr.length)
     ptr.write(0, byteArr, 0, byteArr.length)
     caffeLib.load_solver_from_protobuf(state, ptr, byteArr.length)
-    new CaffeNet(state, caffeLib)
+    return new CaffeNet(state, caffeLib)
   }
 }

@@ -35,7 +35,7 @@ object RDDLayer {
       }
       result.addInclude(netState)
     }
-    result.build()
+    return result.build()
   }
 }
 
@@ -51,7 +51,7 @@ object ConvolutionLayer {
     result.addAllTop(List(name).asJava)
     result.addAllBottom(bottom.asJava)
     result.setConvolutionParam(layerParam)
-    result.build()
+    return result.build()
   }
 }
 
@@ -81,7 +81,7 @@ object PoolingLayer {
     result.addAllTop(List(name).asJava)
     result.addAllBottom(bottom.asJava)
     result.setPoolingParam(layerParam)
-    result.build()
+    return result.build()
   }
 }
 
@@ -95,7 +95,7 @@ object InnerProductLayer {
     result.addAllTop(List(name).asJava)
     result.addAllBottom(bottom.asJava)
     result.setInnerProductParam(layerParam)
-    result.build()
+    return result.build()
   }
 }
 
@@ -108,7 +108,7 @@ object ReLULayer {
     result.addAllTop(List(name).asJava)
     result.addAllBottom(bottom.asJava)
     result.setReluParam(layerParam)
-    result.build()
+    return result.build()
   }
 }
 
@@ -123,7 +123,7 @@ object SoftmaxWithLoss {
     result.addAllBottom(bottom.asJava)
     result.setLossParam(lossParam)
     result.setSoftmaxParam(softmaxParam)
-    result.build()
+    return result.build()
   }
 }
 
@@ -132,6 +132,6 @@ object NetParam {
     val result = NetParameter.newBuilder()
     result.setName(name)
     result.addAllLayer(layers.toList.asJava)
-    result.build()
+    return result.build()
   }
 }

@@ -34,7 +34,7 @@ object ComputeMean {
       imageSum(j) /= numData
       j += 1
     }
-    NDArray(imageSum, shape)
+    return NDArray(imageSum, shape)
   }
 
   def computeMeanFromMinibatches(minibatchRDD: RDD[(Array[ByteImage], Array[Int])], shape: Array[Int], numData: Int): NDArray = {
@@ -72,7 +72,7 @@ object ComputeMean {
       imageSum(j) /= numData
       j += 1
     }
-    NDArray(imageSum, shape)
+    return NDArray(imageSum, shape)
   }
 
   def writeMeanToBinaryProto(caffeLib: CaffeLibrary, meanImage: NDArray, filename: String) = {

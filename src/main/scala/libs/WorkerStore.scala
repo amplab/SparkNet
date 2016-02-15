@@ -11,7 +11,7 @@ class WorkerStore() {
   }
 
   def getNet(name: String): CaffeNet = {
-    nets(name)
+    return nets(name)
   }
 
   def setLib(library: CaffeLibrary) = {
@@ -20,6 +20,6 @@ class WorkerStore() {
 
   def getLib(): CaffeLibrary = {
     assert(!caffeLib.isEmpty)
-    caffeLib.get
+    return caffeLib.get
   }
 }

@@ -50,7 +50,7 @@ class ImageNetLoader(bucket: String) extends java.io.Serializable {
       labelsMap(filename) = label.toInt
       line = labelsReader.readLine()
     }
-    labelsMap
+    return labelsMap
   }
 
   def loadImagesFromTar(filePathsRDD: RDD[URI], broadcastMap: Broadcast[Map[String, Int]]): RDD[(Array[Byte], Int)] = {

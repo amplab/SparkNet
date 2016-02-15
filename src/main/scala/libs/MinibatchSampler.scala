@@ -36,24 +36,24 @@ class MinibatchSampler(minibatchIt: Iterator[(Array[ByteImage], Array[Int])], to
   def nextImageMinibatch(): Array[ByteImage] = {
     if (currMinibatchImages.isEmpty) {
       nextMinibatch()
-      currMinibatchImages.get
+      return currMinibatchImages.get
     } else {
       val images = currMinibatchImages.get
       currMinibatchImages = None
       currMinibatchLabels = None
-      images
+      return images
     }
   }
 
   def nextLabelMinibatch(): Array[Int] = {
     if (currMinibatchLabels.isEmpty) {
       nextMinibatch()
-      currMinibatchLabels.get
+      return currMinibatchLabels.get
     } else {
       val labels = currMinibatchLabels.get
       currMinibatchImages = None
       currMinibatchLabels = None
-      labels
+      return labels
     }
   }
 
