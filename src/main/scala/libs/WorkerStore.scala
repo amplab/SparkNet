@@ -1,8 +1,18 @@
 package libs
 
-import libs._
+import scala.collection.mutable.Map
 
 class WorkerStore() {
+  val store = Map[String, Any]()
+
+  def get[T](key: String): T = {
+    return store(key).asInstanceOf[T]
+  }
+
+  def put(key: String, value: Any) = {
+    store += (key -> value)
+  }
+
   var nets: Map[String, CaffeNet] = Map()
   var caffeLib: Option[CaffeLibrary] = None
 

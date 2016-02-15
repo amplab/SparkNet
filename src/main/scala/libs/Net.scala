@@ -11,6 +11,7 @@ import caffe._
 import caffe.Caffe._
 import libs._
 
+/*
 class WeightCollection(val allWeights: Map[String, MutableList[NDArray]], val layerNames: List[String]) extends java.io.Serializable {
   val numLayers = layerNames.length
 
@@ -45,6 +46,7 @@ object WeightCollection extends java.io.Serializable {
     new WeightCollection(newWeights, layerNames)
   }
 }
+*/
 
 trait Net {
   def setTrainData(minibatchSampler: MinibatchSampler, trainPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None)

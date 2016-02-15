@@ -5,7 +5,43 @@ assemblySettings
 // to regenerate the Java protobuf files, run:
 // protoc -I=$SPARKNET_HOME/caffe/src/caffe/proto/ --java_out=$SPARKNET_HOME/src/main/scala/protobuf/' $SPARKNET_HOME/caffe/src/caffe/proto/caffe.proto
 
+classpathTypes += "maven-plugin"
+
+resolvers += "javacpp" at "http://www.eecs.berkeley.edu/~rkn/temp/"
+
+// resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
+
+libraryDependencies += "org.bytedeco" % "javacpp" % "1.2-SNAPSHOT"
+
+libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.2-SNAPSHOT"
+
+libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.2-SNAPSHOT" classifier "linux-x86_64"
+
+libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.1.0-1.2-SNAPSHOT"
+
+libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.1.0-1.2-SNAPSHOT" classifier "linux-x86_64"
+
+// libraryDependencies += "org.bytedeco" % "javacpp" % "1.1"
+
+// libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.1"
+// libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.1" classifier "linux-x86"
+// libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.1" classifier "linux-x86_64"
+// libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.1" classifier "macosx-x86_64"
+// libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.1" classifier "windows-x86"
+// libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.1" classifier "windows-x86_64"
+
+// libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.0.0-1.1"
+// libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.0.0-1.1" classifier "linux-x86"
+// libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.0.0-1.1" classifier "linux-x86_64"
+// libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.0.0-1.1" classifier "macosx-x86_64"
+// libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.0.0-1.1" classifier "windows-x86"
+// libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.0.0-1.1" classifier "windows-x86_64"
+
 libraryDependencies += "com.google.protobuf" % "protobuf-java" % "2.5.0"
+
+libraryDependencies += "org.apache.spark" %% "spark-sql" % "1.4.1" % "provided"
+
+libraryDependencies += "com.databricks" % "spark-csv_2.11" % "1.3.0"
 
 libraryDependencies += "org.apache.spark" %% "spark-core" % "1.4.1" % "provided"
 
