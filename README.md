@@ -77,26 +77,34 @@ To run CifarApp, do the following:
 1. First get the Cifar data with
 
         $SPARKNET_HOME/caffe/data/cifar10/get_cifar10.sh
-2. Set the correct value of `sparkNetHome` in `src/main/scala/apps/CifarApp.scala`.
-3. Then submit the job with `spark-submit`
+2. Then submit the job with `spark-submit`
 
         $SPARK_HOME/bin/spark-submit --class apps.CifarApp SparkNetPreview/target/scala-2.10/sparknetpreview-assembly-0.1-SNAPSHOT.jar 5
 
 #### ImageNet
 To run ImageNet, do the following:
 
-1.  Obtain the ImageNet data by following the instructions [here](http://www.image-net.org/download-images). This involves creating an account and submitting a request.
-2. Put the training and test data on S3 (see instructions in this [issue](https://github.com/amplab/SparkNet/issues/59)).
-3. On the master, create `~/.aws/credentials` with the following content:
+1. Obtain the ImageNet files (`ILSVRC2012_img_train.tar` and `ILSVRC2012_img_val.tar`) by following the instructions [here](http://www.image-net.org/download-images). This involves creating an account and submitting a request.
+2. On the master, create `~/.aws/credentials` with the following content:
 
         [default]
         aws_access_key_id=
         aws_secret_access_key=
-4. Set the correct value of `sparkNetHome` in `src/main/scala/apps/ImageNetApp.scala`.
+3. Run `~/spark-ec2/copy-dir ~/.aws` to copy the credentials to the workers (note that this command is sensitive to the placement of the slashes).
+4. Run the following script to put the ImageNet data on S3 in the appropriate format:
+```
+python $SPARKNET_HOME/scripts/put_imagenet_on_s3.py sparknet \
+    --train_tar_file=/path/to/ILSVRC2012_img_train.tar \
+    --val_tar_file=/path/to/ILSVRC2012_img_val.tar \
+    --new_width=256 \
+    --new_height=256
+```
+Note that in the above command, `sparknet` is the name of the S3 bucket, and you will have to change it to the name of your S3 bucket.
+This script will shuffle the training data, tar the validation images, and resize all of the images to be 256x256.
 5. Submit a job on the master with
 
-        spark-submit --class apps.ImageNetApp $SPARKNET_HOME/target/scala-2.10/sparknet-assembly-0.1-SNAPSHOT.jar n
-where `n` is the number of worker nodes in your Spark cluster.
+        spark-submit --class apps.ImageNetApp $SPARKNET_HOME/target/scala-2.10/sparknet-assembly-0.1-SNAPSHOT.jar n sparknet
+where `n` is the number of worker nodes in your Spark cluster and `sparknet` is the name of your S3 bucket (you have to change this to the correct name of your S3 bucket).
 
 ## The SparkNet Architecture
 SparkNet is a deep learning library for Spark.
