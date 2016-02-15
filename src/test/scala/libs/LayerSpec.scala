@@ -4,8 +4,8 @@ import java.io._
 import caffe._
 import caffe.Caffe._
 
-import com.sun.jna.Pointer;
-import com.sun.jna.Memory;
+import com.sun.jna.Pointer
+import com.sun.jna.Memory
 
 class LayerSpec extends FlatSpec {
   "Layer definition" should "should be loadable" in {
@@ -33,7 +33,7 @@ class LayerSpec extends FlatSpec {
     val lenetState = caffeLib.create_state()
 
     var byteArr = netParam.toByteArray()
-    var ptr = new Memory(byteArr.length);
+    var ptr = new Memory(byteArr.length)
     ptr.write(0, byteArr, 0, byteArr.length)
     caffeLib.load_net_from_protobuf(lenetState, ptr, byteArr.length)
 
@@ -44,7 +44,7 @@ class LayerSpec extends FlatSpec {
     val state = caffeLib.create_state()
 
     byteArr = solverParameter.toByteArray()
-    ptr = new Memory(byteArr.length);
+    ptr = new Memory(byteArr.length)
     ptr.write(0, byteArr, 0, byteArr.length)
     caffeLib.load_solver_from_protobuf(state, ptr, byteArr.length)
 	}

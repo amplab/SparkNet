@@ -67,7 +67,7 @@ class CallbackBenchmarkSpec extends FlatSpec {
     ()
   }
   val byteImageCallback = makeByteImageCallback(byteImageMinibatch, Some(preprocessing))
-  val data = new Memory(channels * fullWidth * fullHeight * trainBatchSize * dtypeSize);
+  val data = new Memory(channels * fullWidth * fullHeight * trainBatchSize * dtypeSize)
 
   log("before byte image callback")
   byteImageCallback.invoke(data, trainBatchSize, 3, new Pointer(0))
@@ -80,7 +80,7 @@ class CallbackBenchmarkSpec extends FlatSpec {
         for (j <- 0 to batchSize - 1) {
           preprocessing.get(minibatch(j), buffer)
           val dtypeSize = 4
-          data.write(j * 227 * 227 * 3 * dtypeSize, buffer, 0, 227 * 227 * 3);
+          data.write(j * 227 * 227 * 3 * dtypeSize, buffer, 0, 227 * 227 * 3)
         }
       }
     }

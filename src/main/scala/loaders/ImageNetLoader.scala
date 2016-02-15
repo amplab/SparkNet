@@ -9,7 +9,7 @@ import scala.collection.JavaConversions._
 
 import com.amazonaws.services.s3._
 import com.amazonaws.services.s3.model._
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.auth.profile.ProfileCredentialsProvider
 
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
@@ -23,23 +23,23 @@ class ImageNetLoader(bucket: String) extends java.io.Serializable {
   // optional number of parts, return an RDD with one URI per file on the
   // data path.
   def getFilePathsRDD(sc: SparkContext, path: String, numParts: Option[Int] = None): RDD[URI] = {
-    val s3Client = new AmazonS3Client(new ProfileCredentialsProvider());
-    val listObjectsRequest = new ListObjectsRequest().withBucketName(bucket).withPrefix(path);
+    val s3Client = new AmazonS3Client(new ProfileCredentialsProvider())
+    val listObjectsRequest = new ListObjectsRequest().withBucketName(bucket).withPrefix(path)
     var filePaths = ArrayBuffer[URI]()
     var objectListing: ObjectListing = null
     do {
-      objectListing = s3Client.listObjects(listObjectsRequest);
+      objectListing = s3Client.listObjects(listObjectsRequest)
       for (elt <- objectListing.getObjectSummaries()) {
         filePaths += new URI(elt.getKey())
       }
-      listObjectsRequest.setMarker(objectListing.getNextMarker());
+      listObjectsRequest.setMarker(objectListing.getNextMarker())
     } while (objectListing.isTruncated())
     sc.parallelize(filePaths, numParts.getOrElse(filePaths.length))
   }
 
   // Load the labels file from S3, which associates the filename of each image with its class.
   def getLabels(labelsPath: String) : Map[String, Int] = {
-    val s3Client = new AmazonS3Client(new ProfileCredentialsProvider());
+    val s3Client = new AmazonS3Client(new ProfileCredentialsProvider())
     val labelsFile = s3Client.getObject(new GetObjectRequest(bucket, labelsPath))
     val labelsReader = new BufferedReader(new InputStreamReader(labelsFile.getObjectContent()))
     var labelsMap : Map[String, Int] = Map()
@@ -56,7 +56,7 @@ class ImageNetLoader(bucket: String) extends java.io.Serializable {
   def loadImagesFromTar(filePathsRDD: RDD[URI], broadcastMap: Broadcast[Map[String, Int]]): RDD[(Array[Byte], Int)] = {
     filePathsRDD.flatMap(
       fileUri => {
-        val s3Client = new AmazonS3Client(new ProfileCredentialsProvider());
+        val s3Client = new AmazonS3Client(new ProfileCredentialsProvider())
         val stream = s3Client.getObject(new GetObjectRequest(bucket, fileUri.getPath())).getObjectContent()
         val tarStream = new ArchiveStreamFactory().createArchiveInputStream("tar", stream).asInstanceOf[TarArchiveInputStream]
         var entry = tarStream.getNextTarEntry()
