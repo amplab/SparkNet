@@ -14,7 +14,7 @@ object ProtoLoader {
     var data = caffeLib.get_prototxt_data(state)
     var bytes = data.getByteArray(0, len)
     caffeLib.destroy_state(state)
-    return SolverParameter.parseFrom(bytes)
+    SolverParameter.parseFrom(bytes)
   }
 
   def loadNetPrototxt(filename: String): NetParameter = {
@@ -25,7 +25,7 @@ object ProtoLoader {
     var data = caffeLib.get_prototxt_data(state)
     var bytes = data.getByteArray(0, len)
     caffeLib.destroy_state(state)
-    return NetParameter.parseFrom(bytes)
+    NetParameter.parseFrom(bytes)
   }
 
   def loadSolverPrototxtWithNet(solverFilename: String, netParameter: NetParameter, snapshotPath: Option[String]) : SolverParameter = {
@@ -39,12 +39,12 @@ object ProtoLoader {
     }
     solverBuilder.clearNet()
     solverBuilder.setNetParam(netParameter)
-    return solverBuilder.build()
+    solverBuilder.build()
   }
 
   def loadSolverWithNetPrototxt(solverFilename: String, netFilename: String, snapshotPath: Option[String]) : SolverParameter = {
     val netParameter = loadNetPrototxt(netFilename)
-    return loadSolverPrototxtWithNet(solverFilename, netParameter, snapshotPath)
+    loadSolverPrototxtWithNet(solverFilename, netParameter, snapshotPath)
   }
 
   def replaceDataLayers(netParameter: NetParameter, trainBatchSize: Int, testBatchSize: Int, numChannels: Int, height: Int, width: Int): NetParameter = {
@@ -53,6 +53,6 @@ object ProtoLoader {
     netBuilder.setLayer(1, RDDLayer("label", shape=List(trainBatchSize, 1), Some(Include.Train)))
     netBuilder.addLayer(0, RDDLayer("data", shape=List(testBatchSize, numChannels, height, width), Some(Include.Test)))
     netBuilder.addLayer(1, RDDLayer("label", shape=List(testBatchSize, 1), Some(Include.Test)))
-    return netBuilder.build()
+    netBuilder.build()
   }
 }
