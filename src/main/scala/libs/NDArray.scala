@@ -5,15 +5,15 @@ class NDArray private(val javaArray: JavaNDArray) extends java.io.Serializable {
   val shape = javaArray.shape
 
   def subarray(lowerOffsets: Array[Int], upperOffsets: Array[Int]): NDArray = {
-    return new NDArray(javaArray.subArray(lowerOffsets, upperOffsets))
+    new NDArray(javaArray.subArray(lowerOffsets, upperOffsets))
   }
 
   def slice(axis: Int, index: Int): NDArray = {
-    return new NDArray(javaArray.slice(axis, index))
+    new NDArray(javaArray.slice(axis, index))
   }
 
   def get(indices: Array[Int]): Float = {
-    return javaArray.get(indices:_*)
+    javaArray.get(indices:_*)
   }
 
   def set(indices: Array[Int], value: Float) = {
@@ -25,11 +25,11 @@ class NDArray private(val javaArray: JavaNDArray) extends java.io.Serializable {
   }
 
   def toFlat(): Array[Float] = {
-    return javaArray.toFlat()
+    javaArray.toFlat()
   }
 
   def getBuffer(): Array[Float] = {
-    return javaArray.getBuffer()
+    javaArray.getBuffer()
   }
 
   def add(that: NDArray) = {
@@ -55,6 +55,6 @@ object NDArray {
   def plus(v1: NDArray, v2: NDArray): NDArray = {
     val v = new NDArray(new JavaNDArray(v1.toFlat(), v1.shape:_*))
     v.add(v2)
-    return v
+    v
   }
 }

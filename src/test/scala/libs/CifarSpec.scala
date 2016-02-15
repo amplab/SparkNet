@@ -30,7 +30,7 @@ class CifarSpec extends FlatSpec {
     val intSize = caffeLib.get_int_size()
 
     def makeImageCallback(images: Array[Array[Byte]]) : CaffeLibrary.java_callback_t = {
-      return new CaffeLibrary.java_callback_t() {
+      new CaffeLibrary.java_callback_t() {
         var currImage = 0
         def invoke(data: Pointer, batch_size: Int, num_dims: Int, shape: Pointer) {
           var size = 1
@@ -53,7 +53,7 @@ class CifarSpec extends FlatSpec {
     }
 
     def makeLabelCallback(labels: Array[Int]) : CaffeLibrary.java_callback_t =  {
-      return new CaffeLibrary.java_callback_t() {
+      new CaffeLibrary.java_callback_t() {
         var currImage = 0
         def invoke(data: Pointer, batch_size: Int, num_dims: Int, shape: Pointer) {
           for(j <- 0 to batch_size-1) {
