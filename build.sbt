@@ -2,14 +2,9 @@ import AssemblyKeys._
 
 assemblySettings
 
-// to regenerate the Java protobuf files, run:
-// protoc -I=$SPARKNET_HOME/caffe/src/caffe/proto/ --java_out=$SPARKNET_HOME/src/main/scala/protobuf/' $SPARKNET_HOME/caffe/src/caffe/proto/caffe.proto
-
 classpathTypes += "maven-plugin"
 
 resolvers += "javacpp" at "http://www.eecs.berkeley.edu/~rkn/temp/"
-
-// resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
 
 libraryDependencies += "org.bytedeco" % "javacpp" % "1.2-SNAPSHOT"
 

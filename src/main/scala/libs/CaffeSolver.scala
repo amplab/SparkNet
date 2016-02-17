@@ -10,7 +10,7 @@ trait Solver {
 
 class CaffeSolver(solverParam: SolverParameter, schema: StructType, preprocessor: Preprocessor) extends FloatSGDSolver(solverParam) {
 
-  val trainNet = new JavaCPPCaffeNet(solverParam.net_param, schema, preprocessor, net())
+  val trainNet = new CaffeNet(solverParam.net_param, schema, preprocessor, net())
 
   def step(rowIt: Iterator[Row]) {
     trainNet.forwardBackward(rowIt)

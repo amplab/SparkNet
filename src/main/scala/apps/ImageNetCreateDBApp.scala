@@ -1,3 +1,4 @@
+/*
 package apps
 
 import java.io._
@@ -133,3 +134,4 @@ object ImageNetCreateDBApp {
     log("finished creating databases")
   }
 }
+*/

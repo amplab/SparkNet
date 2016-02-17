@@ -1,3 +1,4 @@
+/*
 package preprocessing
 
 import com.sun.jna.Pointer
@@ -50,3 +51,4 @@ class CreateDB(caffeLib: CaffeLibrary, dbType: String) {
     caffeLib.close_db(state)
   }
 }
+*/

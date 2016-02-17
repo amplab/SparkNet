@@ -2,11 +2,7 @@
 Distributed Neural Networks for Spark.
 Details are available in the [paper](http://arxiv.org/abs/1511.06051).
 
-## Using SparkNet
-To run SparkNet, you will need a [Spark](http://spark.apache.org) cluster.
-SparkNet apps can be run using [spark-submit](http://spark.apache.org/docs/latest/submitting-applications.html).
-
-### Quick Start
+## Quick Start
 **Start a Spark cluster using our AMI**
 
 1. Create an AWS secret key and access key. Instructions [here](http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html).
@@ -14,136 +10,104 @@ SparkNet apps can be run using [spark-submit](http://spark.apache.org/docs/lates
 3. Clone our repository locally.
 4. Start a 5-worker Spark cluster on EC2 by running
 
-        SparkNet/ec2/spark-ec2 --key-pair=key --identity-file=key.rsa --region=eu-west-1 --zone=eu-west-1c --instance-type=g2.8xlarge --ami=ami-c0dd7db3 -s 5 --copy-aws-credentials --spark-version 1.5.0 --spot-price 1.5 --no-ganglia --user-data SparkNet/ec2/cloud-config.txt launch sparknet
-assuming `key.rsa` is your key pair.
+        SparkNet/ec2/spark-ec2 --key-pair=key \
+                               --identity-file=key.pem \
+                               --region=eu-west-1 \
+                               --zone=eu-west-1c \
+                               --instance-type=g2.8xlarge \
+                               --ami=ami-b19624c2 \
+                               --copy-aws-credentials \
+                               --spark-version=1.5.0 \
+                               --spot-price=1.5 \
+                               --no-ganglia \
+                               --user-data SparkNet/ec2/cloud-config.txt \
+                               --slaves=5 \
+                               launch sparknet
+You will probably have to change several fields in this command.
+For example, the flags `--key-pair` and `--identity-file` specify the key pair you will use to connect to the cluster.
+The flag `--slaves` specifies the number of Spark workers.
 
 **Train Cifar using SparkNet**
 
 1. SSH to the Spark master as `root`.
-2. Run `/root/SparkNet/caffe/data/cifar10/get_cifar10.sh` to get the Cifar data
+2. Run `bash /root/SparkNet/data/cifar10/get_cifar10.sh` to get the Cifar data
 3. Train Cifar on 5 workers using
 
         /root/spark/bin/spark-submit --class apps.CifarApp /root/SparkNet/target/scala-2.10/sparknet-assembly-0.1-SNAPSHOT.jar 5
-4. That's all! Information is logged on the master in `/root/training_log*.txt`.
+4. That's all! Information is logged on the master in `/root/SparkNet/training_log*.txt`.
 
+**Train ImageNet using SparkNet**
 
-### Dependencies
-For now, you have to install the following.
-We have an AMI with these dependencies already installed (ami-c0dd7db3).
-Dependencies:
+1. Obtain the ImageNet data by following the instructions [here](http://www.image-net.org/download-images) with
 
-1. sbt 0.13 - [installation instructions](http://www.scala-sbt.org/0.13/tutorial/Installing-sbt-on-Linux.html)
-2. cuda 7.0 - [installation instructions](http://docs.nvidia.com/cuda/cuda-getting-started-guide-for-linux/#axzz3sjNgyLGA)
-3. lmdb - `apt-get install liblmdb-dev` (optional, only if you want to use LMDB)
-4. leveldb - `apt-get install libleveldb-dev` (optional, only if you want to use LevelDB)
+    ```
+    wget http://.../ILSVRC2012_img_train.tar
+    wget http://.../ILSVRC2012_img_val.tar
+    ```
+    This involves creating an account and submitting a request.
+2. Create an Amazon S3 bucket with name `S3_BUCKET`.
+3. Upload the ImageNet data in the appropriate format to S3 with the command
 
-### Setup
+    ```
+    python $SPARKNET_HOME/scripts/put_imagenet_on_s3.py $S3_BUCKET \
+        --train_tar_file=/path/to/ILSVRC2012_img_train.tar \
+        --val_tar_file=/path/to/ILSVRC2012_img_val.tar \
+        --new_width=256 \
+        --new_height=256
+    ```
+    This command resizes the images to 256x256, shuffles the training data, and tars the validation files into chunks.
+4. Train ImageNet on 5 workers using
 
-**On EC2:**
+    ```
+    /root/spark/bin/spark-submit --class apps.ImageNetApp /root/SparkNet/target/scala-2.10/sparknet-assembly-0.1-SNAPSHOT.jar 5
+    ```
 
-1. For each worker node, create one volume (e.g., 100GB) and attach it to the worker (e.g., for instance, at `/dev/sdf`)
+## Building your own AMI
 
-**On the master:**
+1. Start an EC2 instance with Ubuntu 14.04 and a GPU instance type (e.g., g2.8xlarge). Suppose it has IP address xxx.xx.xx.xxx.
+2. Connect to the node as `ubuntu`:
 
-1. Clone the SparkNet repository.
-2. Set the `SPARKNET_HOME` environment variable to the SparkNet directory.
-3. Build Caffe by running the following:
+    ```
+    ssh -i ~/.ssh/key.pem ubuntu@xxx.xx.xx.xxx
+    ```
+3. Install an editor `sudo apt-get install emacs`.
+4. Open the file
 
-        cd $SPARKNET_HOME
-        mkdir build
-        cd build
-        cmake ../libccaffe
-        make -j 30
-4. Increase the Java heap space with `export _JAVA_OPTIONS="-Xmx8g"`.
-5. Run `mkdir /tmp/spark-events` (Spark does some logging there).
-6. Build SparkNet by doing:
+    ```
+    sudo emacs /root/.ssh/authorized_keys
+    ```
+    and delete everything before `ssh-rsa ...` so that you can connect to the node as `root`.
+5. Close the connection with `exit`.
+6. Connect to the node as `root`:
 
-        cd $SPARKNET_HOME
-        sbt assembly
+    ```
+    ssh -i ~/.ssh/key.pem root@xxx.xx.xx.xxx
+    ```
+7. Intall CUDA-7.5. [The best instructions I've found are here](http://tleyden.github.io/blog/2015/11/22/cuda-7-dot-5-on-aws-gpu-instance-running-ubuntu-14-dot-04/).
+8. Install sbt. [Instructions here](http://www.scala-sbt.org/0.13/docs/Installing-sbt-on-Linux.html).
+9. `apt-get update`
+10. `apt-get install awscli s3cmd`
+11. Install Java `apt-get install openjdk-7-jdk`.
+12. Clone the SparkNet repository `git clone https://github.com/amplab/SparkNet.git` in your home directory.
+13. Build SparkNet with `cd ~/SparkNet` and `sbt assemble`.
+14. Add the following to your `~/.bashrc`:
 
-**On each worker:**
+    ```
+    export LD_LIBRARY_PATH=/usr/local/cuda-7.5/targets/x86_64-linux/lib
+    export _JAVA_OPTIONS=-Xmx8g
+    export SPARKNET_HOME=/root/SparkNet/
+    ```
+    Some of these paths may need to be adapted, but the `LD_LIBRARY_PATH` directory should contain `libcudart.so.7.5` (this file can be found with `locate libcudart.so.7.5` after running `updatedb`).
+15. Create the file `~/.bash_profile` and add the following:
 
-1. Clone the SparkNet repository.
-2. Set the `SPARKNET_HOME` environment variable to the SparkNet directory.
-3. Build Caffe as on the master.
-4. Run `mount /dev/xvdf /mnt2/spark` to mount the volume you created earlier (assuming you attached the volume at `/dev/sdf`). Spark will spill data to disk here. If everything fits in memory, then this may not be necessary.
-
-
-### Example Apps
-#### Cifar
-
-To run CifarApp, do the following:
-
-1. First get the Cifar data with
-
-        $SPARKNET_HOME/caffe/data/cifar10/get_cifar10.sh
-2. Then submit the job with `spark-submit`
-
-        $SPARK_HOME/bin/spark-submit --class apps.CifarApp SparkNetPreview/target/scala-2.10/sparknetpreview-assembly-0.1-SNAPSHOT.jar 5
-
-#### ImageNet
-To run ImageNet, do the following:
-
-1. Obtain the ImageNet files (`ILSVRC2012_img_train.tar` and `ILSVRC2012_img_val.tar`) by following the instructions [here](http://www.image-net.org/download-images). This involves creating an account and submitting a request.
-2. On the master, create `~/.aws/credentials` with the following content:
-
-        [default]
-        aws_access_key_id=
-        aws_secret_access_key=
-3. Run `~/spark-ec2/copy-dir ~/.aws` to copy the credentials to the workers (note that this command is sensitive to the placement of the slashes).
-4. Run the following script to put the ImageNet data on S3 in the appropriate format:
-```
-python $SPARKNET_HOME/scripts/put_imagenet_on_s3.py sparknet \
-    --train_tar_file=/path/to/ILSVRC2012_img_train.tar \
-    --val_tar_file=/path/to/ILSVRC2012_img_val.tar \
-    --new_width=256 \
-    --new_height=256
-```
-Note that in the above command, `sparknet` is the name of the S3 bucket, and you will have to change it to the name of your S3 bucket.
-This script will shuffle the training data, tar the validation images, and resize all of the images to be 256x256.
-5. Submit a job on the master with
-
-        spark-submit --class apps.ImageNetApp $SPARKNET_HOME/target/scala-2.10/sparknet-assembly-0.1-SNAPSHOT.jar n sparknet
-where `n` is the number of worker nodes in your Spark cluster and `sparknet` is the name of your S3 bucket (you have to change this to the correct name of your S3 bucket).
-
-## The SparkNet Architecture
-SparkNet is a deep learning library for Spark.
-Here we describe a bit of the design.
-### Calling Caffe from Java and Scala
-We use [Java Native Access](https://github.com/java-native-access/jna) to call C code from Java.
-Since Caffe is written in C++, we first create a C wrapper for Caffe in `libccaffe/ccaffe.cpp` and `libccaffe/ccaffe.h`.
-We then create a Java interface to the C wrapper in `src/main/java/libs/CaffeLibrary.java`.
-This library could be called directly, but the easiest way to use it is through the `CaffeNet` class in `src/main/scala/libs/Net.scala`.
-
-To enable Caffe to read data from Spark RDDs, we define a `JavaDataLayer` in `caffe/include/caffe/data_layers.hpp` and `caffe/src/caffe/layers/java_data_layer.cpp`.
-
-### Defining Models
-A model is specified in a `NetParameter` object, and a solver is specified in a `SolverParameter` object.
-These can be specified directly in Scala, for example:
-```
-val netParam = NetParam ("LeNet",
-  RDDLayer("data", shape=List(batchsize, 1, 28, 28), None),
-  RDDLayer("label", shape=List(batchsize, 1), None),
-  ConvolutionLayer("conv1", List("data"), kernel=(5,5), numOutput=20),
-  PoolingLayer("pool1", List("conv1"), pooling=Pooling.Max, kernel=(2,2), stride=(2,2)),
-  ConvolutionLayer("conv2", List("pool1"), kernel=(5,5), numOutput=50),
-  PoolingLayer("pool2", List("conv2"), pooling=Pooling.Max, kernel=(2,2), stride=(2,2)),
-  InnerProductLayer("ip1", List("pool2"), numOutput=500),
-  ReLULayer("relu1", List("ip1")),
-  InnerProductLayer("ip2", List("relu1"), numOutput=10),
-  SoftmaxWithLoss("loss", List("ip2", "label"))
-)
-```
-Conveniently, they can be loaded from Caffe prototxt files:
-
-```
-val sparkNetHome = sys.env("SPARKNET_HOME")
-var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/train_val.prototxt")
-netParameter = ProtoLoader.replaceDataLayers(netParameter, trainBatchSize, testBatchSize, channels, croppedHeight, croppedWidth)
-val solverParameter = ProtoLoader.loadSolverPrototxtWithNet(sparkNetHome + "/caffe/models/bvlc_reference_caffenet/solver.prototxt", netParameter, None)
-```
-The third line modifies the `NetParameter` object to read data from a `JavaDataLayer`.
-A `CaffeNet` object can then be created from a `SolverParameter` object:
-```
-val net = CaffeNet(solverParameter)
-```
+    ```
+    if [ "$BASH" ]; then
+      if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+      fi
+    fi
+    export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+    ```
+    Spark expects `JAVA_HOME` to be set in your `~/.bash_profile` and the launch script `SparkNet/ec2/spark-ec2` will give an error if it isn't there.
+16. Clear your bash history `cat /dev/null > ~/.bash_history && history -c && exit`.
+17. Now you can create an image of your instance, and you're all set! This is the procedure that we used to create our AMI.

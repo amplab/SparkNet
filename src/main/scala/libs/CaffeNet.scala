@@ -16,13 +16,13 @@ trait NetInterface {
   def outputSchema(): StructType
 }
 
-object JavaCPPCaffeNet {
-  def apply(netParam: NetParameter, schema: StructType, preprocessor: Preprocessor): JavaCPPCaffeNet = {
-    return new JavaCPPCaffeNet(netParam, schema, preprocessor, new FloatNet(netParam))
+object CaffeNet {
+  def apply(netParam: NetParameter, schema: StructType, preprocessor: Preprocessor): CaffeNet = {
+    return new CaffeNet(netParam, schema, preprocessor, new FloatNet(netParam))
   }
 }
 
-class JavaCPPCaffeNet(netParam: NetParameter, schema: StructType, preprocessor: Preprocessor, caffeNet: FloatNet) {
+class CaffeNet(netParam: NetParameter, schema: StructType, preprocessor: Preprocessor, caffeNet: FloatNet) {
   private val inputSize = netParam.input_size
   private val batchSize = netParam.input_shape(0).dim(0).toInt
   private val transformations = new Array[Any => NDArray](inputSize)
@@ -83,7 +83,7 @@ class JavaCPPCaffeNet(netParam: NetParameter, schema: StructType, preprocessor: 
   }
 
   def forward(rowIt: Iterator[Row]): Map[String, NDArray] = {
-    Caffe.set_mode(Caffe.GPU)
+    // Caffe.set_mode(Caffe.GPU)
     transformInto(rowIt, inputs)
     val tops = caffeNet.Forward(inputs)
     val outputs = Map[String, NDArray]()
@@ -99,7 +99,7 @@ class JavaCPPCaffeNet(netParam: NetParameter, schema: StructType, preprocessor: 
   }
 
   def forwardBackward(rowIt: Iterator[Row]) = {
-    Caffe.set_mode(Caffe.GPU)
+    // Caffe.set_mode(Caffe.GPU)
     print("entering forwardBackward\n")
     val t1 = System.currentTimeMillis()
     transformInto(rowIt, inputs)

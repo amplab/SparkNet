@@ -1,3 +1,4 @@
+/*
 package apps
 
 import java.io._
@@ -115,3 +116,4 @@ object ImageNetRunDBApp {
     log("finished training")
   }
 }
+*/
