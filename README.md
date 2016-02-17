@@ -15,7 +15,7 @@ Details are available in the [paper](http://arxiv.org/abs/1511.06051).
                                --region=eu-west-1 \
                                --zone=eu-west-1c \
                                --instance-type=g2.8xlarge \
-                               --ami=ami-8b8c3ef8 \
+                               --ami=ami-c573c1b6 \
                                --copy-aws-credentials \
                                --spark-version=1.5.0 \
                                --spot-price=1.5 \
