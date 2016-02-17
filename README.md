@@ -84,13 +84,15 @@ The flag `--slaves` specifies the number of Spark workers.
     ssh -i ~/.ssh/key.pem root@xxx.xx.xx.xxx
     ```
 7. Intall CUDA-7.5. [The best instructions I've found are here](http://tleyden.github.io/blog/2015/11/22/cuda-7-dot-5-on-aws-gpu-instance-running-ubuntu-14-dot-04/).
-8. Install sbt. [Instructions here](http://www.scala-sbt.org/0.13/docs/Installing-sbt-on-Linux.html).
-9. `apt-get update`
-10. `apt-get install awscli s3cmd`
-11. Install Java `apt-get install openjdk-7-jdk`.
-12. Clone the SparkNet repository `git clone https://github.com/amplab/SparkNet.git` in your home directory.
-13. Build SparkNet with `cd ~/SparkNet` and `sbt assemble`.
-14. Add the following to your `~/.bashrc`:
+8. `echo "/usr/local/cuda-7.5/targets/x86_64-linux/lib/" > /etc/ld.so.conf.d/cuda.conf`
+9. `ldconfig`
+10. Install sbt. [Instructions here](http://www.scala-sbt.org/0.13/docs/Installing-sbt-on-Linux.html).
+11. `apt-get update`
+12. `apt-get install awscli s3cmd`
+13. Install Java `apt-get install openjdk-7-jdk`.
+14. Clone the SparkNet repository `git clone https://github.com/amplab/SparkNet.git` in your home directory.
+15. Build SparkNet with `cd ~/SparkNet` and `sbt assemble`.
+16. Add the following to your `~/.bashrc`:
 
     ```
     export LD_LIBRARY_PATH=/usr/local/cuda-7.5/targets/x86_64-linux/lib
@@ -98,7 +100,7 @@ The flag `--slaves` specifies the number of Spark workers.
     export SPARKNET_HOME=/root/SparkNet/
     ```
     Some of these paths may need to be adapted, but the `LD_LIBRARY_PATH` directory should contain `libcudart.so.7.5` (this file can be found with `locate libcudart.so.7.5` after running `updatedb`).
-15. Create the file `~/.bash_profile` and add the following:
+17. Create the file `~/.bash_profile` and add the following:
 
     ```
     if [ "$BASH" ]; then
@@ -109,5 +111,5 @@ The flag `--slaves` specifies the number of Spark workers.
     export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
     ```
     Spark expects `JAVA_HOME` to be set in your `~/.bash_profile` and the launch script `SparkNet/ec2/spark-ec2` will give an error if it isn't there.
-16. Clear your bash history `cat /dev/null > ~/.bash_history && history -c && exit`.
-17. Now you can create an image of your instance, and you're all set! This is the procedure that we used to create our AMI.
+18. Clear your bash history `cat /dev/null > ~/.bash_history && history -c && exit`.
+19. Now you can create an image of your instance, and you're all set! This is the procedure that we used to create our AMI.
