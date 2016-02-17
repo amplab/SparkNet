@@ -18,6 +18,9 @@ import org.apache.spark.broadcast.Broadcast
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 
+import libs._
+import preprocessing._
+
 class ImageNetLoader(bucket: String) extends java.io.Serializable {
   // Given a path to a directory containing a number of files, and an
   // optional number of parts, return an RDD with one URI per file on the
@@ -53,7 +56,7 @@ class ImageNetLoader(bucket: String) extends java.io.Serializable {
     labelsMap
   }
 
-  def loadImagesFromTar(filePathsRDD: RDD[URI], broadcastMap: Broadcast[Map[String, Int]]): RDD[(Array[Byte], Int)] = {
+  def loadImagesFromTar(filePathsRDD: RDD[URI], broadcastMap: Broadcast[Map[String, Int]], height: Int = 256, width: Int = 256): RDD[(Array[Byte], Int)] = {
     filePathsRDD.flatMap(
       fileUri => {
         val s3Client = new AmazonS3Client(new ProfileCredentialsProvider())
@@ -75,11 +78,13 @@ class ImageNetLoader(bucket: String) extends java.io.Serializable {
             }
             // load the image data
             val filename = Paths.get(entry.getName()).getFileName().toString
-            images += ((content, broadcastMap.value(filename)))
-            entry = tarStream.getNextTarEntry()
+            val decompressedResizedImage = ScaleAndConvert.decompressImageAndResize(content, height, width)
+            if (!decompressedResizedImage.isEmpty) {
+              images += ((decompressedResizedImage.get, broadcastMap.value(filename)))
+              entry = tarStream.getNextTarEntry()
+            }
           }
         }
-
         images.iterator
       }
     )
@@ -88,10 +93,10 @@ class ImageNetLoader(bucket: String) extends java.io.Serializable {
   // Loads images from dataPath, and creates a new RDD of (imageData,
   // label) pairs; each image is associated with the labels provided in
   // labelPath
-  def apply(sc: SparkContext, dataPath: String, labelsPath: String, numParts: Option[Int] = None): RDD[(Array[Byte], Int)] = {
+  def apply(sc: SparkContext, dataPath: String, labelsPath: String, height: Int = 256, width: Int = 256, numParts: Option[Int] = None): RDD[(Array[Byte], Int)] = {
     val filePathsRDD = getFilePathsRDD(sc, dataPath, numParts)
     val labelsMap = getLabels(labelsPath)
     val broadcastMap = sc.broadcast(labelsMap)
-    loadImagesFromTar(filePathsRDD, broadcastMap)
+    loadImagesFromTar(filePathsRDD, broadcastMap, height, width)
   }
 }

@@ -1,3 +1,4 @@
+/*
 package apps
 
 import java.io._
@@ -169,3 +170,4 @@ object CifarDBApp {
     log("finished training")
   }
 }
+*/

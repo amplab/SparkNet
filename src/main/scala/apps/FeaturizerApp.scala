@@ -1,3 +1,4 @@
+/*
 package apps
 
 import java.io._
@@ -105,3 +106,4 @@ object FeaturizerApp {
     log("finished featurizing")
   }
 }
+*/
