@@ -15,7 +15,7 @@ Details are available in the [paper](http://arxiv.org/abs/1511.06051).
                                --region=eu-west-1 \
                                --zone=eu-west-1c \
                                --instance-type=g2.8xlarge \
-                               --ami=ami-b19624c2 \
+                               --ami=ami-8b8c3ef8 \
                                --copy-aws-credentials \
                                --spark-version=1.5.0 \
                                --spot-price=1.5 \
@@ -45,8 +45,17 @@ The flag `--slaves` specifies the number of Spark workers.
     wget http://.../ILSVRC2012_img_val.tar
     ```
     This involves creating an account and submitting a request.
-2. Create an Amazon S3 bucket with name `S3_BUCKET`.
-3. Upload the ImageNet data in the appropriate format to S3 with the command
+2. On the Spark master, create `~/.aws/credentials` with the following content:
+
+    ```
+    [default]
+    aws_access_key_id=
+    aws_secret_access_key=
+    ```
+    and fill in the two fields.
+3. Copy this to the workers with `~/spark-ec2/copy-dir ~/.aws` (copy this command exactly because it is somewhat sensitive to the trailing backslashes and that kind of thing).
+4. Create an Amazon S3 bucket with name `S3_BUCKET`.
+5. Upload the ImageNet data in the appropriate format to S3 with the command
 
     ```
     python $SPARKNET_HOME/scripts/put_imagenet_on_s3.py $S3_BUCKET \
@@ -56,10 +65,10 @@ The flag `--slaves` specifies the number of Spark workers.
         --new_height=256
     ```
     This command resizes the images to 256x256, shuffles the training data, and tars the validation files into chunks.
-4. Train ImageNet on 5 workers using
+6. Train ImageNet on 5 workers using
 
     ```
-    /root/spark/bin/spark-submit --class apps.ImageNetApp /root/SparkNet/target/scala-2.10/sparknet-assembly-0.1-SNAPSHOT.jar 5
+    /root/spark/bin/spark-submit --class apps.ImageNetApp /root/SparkNet/target/scala-2.10/sparknet-assembly-0.1-SNAPSHOT.jar 5 $S3_BUCKET
     ```
 
 ## Building your own AMI
