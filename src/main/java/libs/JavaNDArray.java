@@ -56,7 +56,37 @@ public class JavaNDArray implements java.io.Serializable {
     return data[ix];
   }
 
+  private int flatIndex = 0;
+
+  private void baseFlatInto(int offset, float[] result) {
+    if (strides[dim - 1] == 1) {
+      System.arraycopy(data, offset, result, flatIndex, shape[dim - 1]);
+      flatIndex += shape[dim - 1];
+    } else {
+      for (int i = 0; i < shape[dim - 1]; i += 1) {
+        result[flatIndex] = data[offset + i * strides[dim - 1]];
+        flatIndex += 1;
+      }
+    }
+  }
+
+  private void recursiveFlatInto(int currDim, int offset, float[] result) {
+    if (currDim == dim - 1) {
+      baseFlatInto(offset, result);
+    } else {
+      for (int i = 0; i < shape[currDim]; i += 1) {
+        recursiveFlatInto(currDim + 1, offset + i * strides[currDim], result);
+      }
+    }
+  }
+
   public void flatCopy(float[] result) {
+    assert(result.length == JavaNDUtils.arrayProduct(shape));
+    flatIndex = 0;
+    recursiveFlatInto(0, offset, result);
+  }
+
+  public void flatCopySlow(float[] result) {
     assert(result.length == JavaNDUtils.arrayProduct(shape));
     int[] indices = new int[dim];
     int index = 0;

@@ -54,4 +54,34 @@ class NDArraySpec extends FlatSpec {
   assert(a7.toFlat().deep == a8.toFlat().deep)
   a7.scalarDivide(0.5F)
   assert(a7.toFlat().deep == Array(1F, 2F, 3F, 4F, 5F, 6F).deep)
+
+  // test flatCopyFast
+  val rand = new java.util.Random();
+  val a9 = NDArray(Array.fill(3 * 4 * 4)(rand.nextFloat), Array(3, 4, 4))
+  val flatBuffer1 = new Array[Float](3 * 2 * 2)
+  val flatBuffer2 = new Array[Float](3 * 2 * 2)
+  val a10 = a9.subarray(Array(0, 1, 1), Array(3, 3, 3))
+  a10.flatCopySlow(flatBuffer1)
+  a10.flatCopy(flatBuffer2)
+  val epsilon = 1e-7f
+  for (i <- 0 to flatBuffer1.length - 1) {
+    assert(math.abs(flatBuffer1(i) - flatBuffer2(i)) <= epsilon)
+  }
+
+  // performance test flatCopyFast
+  val a11 = NDArray(Array.fill(3 * 256 * 256)(rand.nextFloat), Array(3, 256, 256))
+  val a12 = a11.subarray(Array(0, 10, 10), Array(3, 237, 237))
+  val flatBuffer3 = new Array[Float](3 * 227 * 227)
+  val flatBuffer4 = new Array[Float](3 * 227 * 227)
+  var startTime = System.currentTimeMillis()
+  a12.flatCopySlow(flatBuffer3)
+  var endTime = System.currentTimeMillis()
+  print("flatCopy() took " + (1F * (endTime - startTime) / 1000).toString + "s\n")
+  startTime = System.currentTimeMillis()
+  a12.flatCopy(flatBuffer4)
+  endTime = System.currentTimeMillis()
+  print("flatCopyFast() took " + (1F * (endTime - startTime) / 1000).toString + "s\n")
+  for (i <- 0 to flatBuffer3.length - 1) {
+    assert(math.abs(flatBuffer3(i) - flatBuffer4(i)) <= epsilon)
+  }
 }
