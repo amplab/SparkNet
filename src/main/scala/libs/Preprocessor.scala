@@ -4,12 +4,17 @@ import scala.util.Random
 
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row}
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable._
 
 trait Preprocessor {
   def convert(name: String, shape: Array[Int]): Any => NDArray
 }
 
+// The convert method in DefaultPreprocessor is used to convert data extracted
+// from a dataframe into an NDArray, which can then be passed into a net. The
+// implementation in DefaultPreprocessor is slow and does unnecessary
+// allocation. This is designed to be easier to understand, whereas the
+// ImageNetPreprocessor is designed to be faster.
 class DefaultPreprocessor(schema: StructType) extends Preprocessor {
   def convert(name: String, shape: Array[Int]): Any => NDArray = {
     schema(name).dataType match {
@@ -22,12 +27,22 @@ class DefaultPreprocessor(schema: StructType) extends Preprocessor {
       case IntegerType => (element: Any) => {
         NDArray(Array[Float](element.asInstanceOf[Int].toFloat), shape)
       }
+      case LongType => (element: Any) => {
+        NDArray(Array[Float](element.asInstanceOf[Long].toFloat), shape)
+      }
       case BinaryType => (element: Any) => {
-        NDArray(element.asInstanceOf[Array[Byte]].map(e => e.toFloat), shape)
+        NDArray(element.asInstanceOf[Array[Byte]].map(e => (e & 0xFF).toFloat), shape)
       }
+      // case ArrayType(IntegerType, true) => (element: Any) => {} // TODO(rkn): implement
       case ArrayType(FloatType, true) => (element: Any) => {
-        NDArray(element.asInstanceOf[Seq[Float]].toArray, shape)
+        element match {
+          case element: Array[Float] => NDArray(element.asInstanceOf[Array[Float]], shape)
+          case element: WrappedArray[Float] => NDArray(element.asInstanceOf[WrappedArray[Float]].toArray, shape)
+          case element: ArrayBuffer[Float] => NDArray(element.asInstanceOf[ArrayBuffer[Float]].toArray, shape)
+        }
       }
+      // case ArrayType(DoubleType, true) => (element: Any) => {} // TODO(rkn): implement
+      // case ArrayType(LongType, true) => (element: Any) => {} // TODO(rkn): implement
     }
   }
 }
@@ -38,11 +53,26 @@ class ImageNetPreprocessor(schema: StructType, meanImage: Array[Float], fullHeig
       case IntegerType => (element: Any) => {
         NDArray(Array[Float](element.asInstanceOf[Int].toFloat), shape)
       }
-      case BinaryType => (element: Any) => {
-        val heightOffset = Random.nextInt(fullHeight - croppedHeight)
-        val widthOffset = Random.nextInt(fullWidth - croppedWidth)
-        val imageMinusMean = (element.asInstanceOf[Array[Byte]].map(e => e.toFloat), meanImage).zipped.map(_ - _)
-        NDArray(imageMinusMean, shape).subarray(Array[Int](0, heightOffset, widthOffset), Array[Int](shape(0), heightOffset + croppedHeight, widthOffset + croppedWidth))
+      case BinaryType => {
+        if (shape(0) != 3) {
+          throw new IllegalArgumentException("Expecting input image to have 3 channels.")
+        }
+        val buffer = new Array[Float](3 * fullHeight * fullWidth)
+        (element: Any) => {
+          element match {
+            case element: Array[Byte] => {
+              var index = 0
+              while (index < 3 * fullHeight * fullWidth) {
+                buffer(index) = (element(index) & 0XFF).toFloat - meanImage(index)
+                index += 1
+              }
+            }
+          }
+          val heightOffset = Random.nextInt(fullHeight - croppedHeight + 1)
+          val widthOffset = Random.nextInt(fullWidth - croppedWidth + 1)
+          NDArray(buffer.clone, Array[Int](shape(0), fullHeight, fullWidth)).subarray(Array[Int](0, heightOffset, widthOffset), Array[Int](shape(0), heightOffset + croppedHeight, widthOffset + croppedWidth))
+          // TODO(rkn): probably don't want to call buffer.clone
+        }
       }
     }
   }
