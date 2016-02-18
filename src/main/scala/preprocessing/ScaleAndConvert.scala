@@ -35,8 +35,8 @@ object ScaleAndConvert {
 
   def decompressImageAndResize(compressedImage: Array[Byte], height: Int, width: Int) : Option[Array[Byte]] = {
     // this method takes a JPEG, decompresses it, and resizes it
-    val im = ImageIO.read(new ByteArrayInputStream(compressedImage))
     try {
+      val im = ImageIO.read(new ByteArrayInputStream(compressedImage))
       val resizedImage = Thumbnails.of(im).forceSize(width, height).asBufferedImage()
       Some(BufferedImageToByteArray(resizedImage))
     } catch {

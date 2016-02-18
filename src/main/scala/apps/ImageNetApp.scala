@@ -48,9 +48,9 @@ object ImageNetApp {
 
     val loader = new ImageNetLoader(s3Bucket)
     logger.log("loading train data")
-    var trainRDD = loader.apply(sc, "ILSVRC2012_img_train/train.0000", "train.txt", fullHeight, fullWidth) // TODO(rkn): replace 227 with 256 and implement cropping
+    var trainRDD = loader.apply(sc, "ILSVRC2012_img_train/train.0000", "train.txt", fullHeight, fullWidth)
     logger.log("loading test data")
-    val testRDD = loader.apply(sc, "ILSVRC2012_img_val/val.00", "val.txt", fullHeight, fullWidth) // TODO(rkn): replace 227 with 256 and implement cropping
+    val testRDD = loader.apply(sc, "ILSVRC2012_img_val/val.00", "val.txt", fullHeight, fullWidth)
 
     // convert to dataframes
     val schema = StructType(StructField("data", BinaryType, false) :: StructField("label", IntegerType, false) :: Nil)

@@ -1,19 +1,19 @@
-import libs._
-
 import org.scalatest._
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 
 import java.nio.file.Paths
 
-class LoadSqlDatasetSpec extends FlatSpec {
-  "LoadSqlDataset" should "be able to load the adult dataset" in {
-    val conf = new SparkConf().setAppName("DataFrameLoaderTest").setMaster("local")
+import libs._
+
+class LoadAdultDataSpec extends FlatSpec {
+  "LoadAdultData" should "be able to load the adult dataset" in {
+    val conf = new SparkConf().setAppName("TestSpec").setMaster("local")
     val sc = new SparkContext(conf)
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     val sparkNetHome = sys.env("SPARKNET_HOME")
 
-    val dataset = Paths.get(sparkNetHome, "data/adult.data").toString()
+    val dataset = Paths.get(sparkNetHome, "data/adult/adult.data").toString()
     val df = sqlContext.read.format("com.databricks.spark.csv").option("inferSchema", "true").load(dataset)
     val preprocessor = new DefaultPreprocessor(df.schema)
 

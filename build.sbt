@@ -60,4 +60,4 @@ dependencyOverrides ++= Set(
  "com.fasterxml.jackson.core" % "jackson-databind" % "2.4.4"
 )
 
-test in assembly := {}
+// test in assembly := {}
