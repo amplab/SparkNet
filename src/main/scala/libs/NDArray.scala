@@ -24,6 +24,10 @@ class NDArray private(val javaArray: JavaNDArray) extends java.io.Serializable {
     javaArray.flatCopy(result)
   }
 
+  def flatCopySlow(result: Array[Float]) = {
+    javaArray.flatCopySlow(result)
+  }
+
   def toFlat(): Array[Float] = {
     javaArray.toFlat()
   }
