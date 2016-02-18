@@ -61,3 +61,5 @@ dependencyOverrides ++= Set(
 )
 
 // test in assembly := {}
+
+parallelExecution in test := false

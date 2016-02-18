@@ -24,5 +24,7 @@ class LoadAdultDataSpec extends FlatSpec {
 
     assert((result0.get(Array[Int](0)) - 39.0).abs <= 1e-4)
     assert((result2.get(Array[Int](0)) - 77516.0).abs <= 1e-4)
+
+    sc.stop()
   }
 }

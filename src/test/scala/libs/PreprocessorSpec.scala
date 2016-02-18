@@ -8,10 +8,19 @@ import org.apache.spark.sql.{DataFrame, Row}
 
 import libs._
 
-class PreprocessorSpec extends FlatSpec {
+class PreprocessorSpec extends FlatSpec with BeforeAndAfterAll {
   val conf = new SparkConf().setAppName("TestSpec").setMaster("local")
-  val sc = new SparkContext(conf)
-  val sqlContext = new org.apache.spark.sql.SQLContext(sc)
+  private var sc: SparkContext = null
+  private var sqlContext: org.apache.spark.sql.SQLContext = null
+
+  override protected def beforeAll(): Unit = {
+    sc = new SparkContext(conf)
+    sqlContext = new org.apache.spark.sql.SQLContext(sc)
+  }
+
+  override protected def afterAll(): Unit = {
+    sc.stop()
+  }
 
   "DefaultPreprocessor" should "preserve scalar values" in {
     val typesAndValues = List((IntegerType, 1), (FloatType, 1F), (DoubleType, 1D), (LongType, 1L))
@@ -63,7 +72,7 @@ class PreprocessorSpec extends FlatSpec {
         val endTime = System.currentTimeMillis()
         val totalTime = (endTime - startTime) * 1F / 1000
         print("DefaultPreprocessor converted 256 images in " + totalTime.toString + "s\n")
-        assert(totalTime <= 0.1)
+        assert(totalTime <= 1.0)
       }
     }
   }
@@ -124,6 +133,7 @@ class PreprocessorSpec extends FlatSpec {
     val endTime = System.currentTimeMillis()
     val totalTime = (endTime - startTime) * 1F / 1000
     print("ImageNetPreprocessor converted 256 images in " + totalTime.toString + "s\n")
-    assert(totalTime <= 0.1)
+    assert(totalTime <= 1.0)
   }
+
 }
