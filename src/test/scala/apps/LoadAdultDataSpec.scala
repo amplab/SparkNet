@@ -7,7 +7,7 @@ import java.nio.file.Paths
 import libs._
 
 class LoadAdultDataSpec extends FlatSpec {
-  "LoadAdultData" should "be able to load the adult dataset" in {
+  ignore should "be able to load the adult dataset" in {
     val conf = new SparkConf().setAppName("TestSpec").setMaster("local")
     val sc = new SparkContext(conf)
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
