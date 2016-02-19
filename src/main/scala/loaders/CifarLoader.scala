@@ -22,10 +22,10 @@ class CifarLoader(path: String) {
   val nBatches = 5
   val nData = nBatches * batchSize
 
-  val trainImages = new Array[Array[Byte]](nData)
+  val trainImages = new Array[Array[Float]](nData)
   val trainLabels = new Array[Int](nData)
 
-  val testImages = new Array[Array[Byte]](batchSize)
+  val testImages = new Array[Array[Float]](batchSize)
   val testLabels = new Array[Int](batchSize)
 
   val r = new Random()
@@ -62,7 +62,7 @@ class CifarLoader(path: String) {
     }
   }
 
-  def readBatch(file: File, batch: Int, images: Array[Array[Byte]], labels: Array[Int], perm: Vector[Int]) {
+  def readBatch(file: File, batch: Int, images: Array[Array[Float]], labels: Array[Int], perm: Vector[Int]) {
     val buffer = new Array[Byte](1 + size)
     val inputStream = new FileInputStream(file)
 
@@ -72,11 +72,11 @@ class CifarLoader(path: String) {
     while(nRead != -1) {
       assert(i < batchSize)
       labels(perm(batch * batchSize + i)) = (buffer(0) & 0xFF) // convert to unsigned
-      images(perm(batch * batchSize + i)) = new Array[Byte](size)
+      images(perm(batch * batchSize + i)) = new Array[Float](size)
       var j = 0
       while (j < size) {
         // we access buffer(j + 1) because the 0th position holds the label
-        images(perm(batch * batchSize + i))(j) = buffer(j + 1)
+        images(perm(batch * batchSize + i))(j) = buffer(j + 1) & 0xFF
         j += 1
       }
       nRead = inputStream.read(buffer)
