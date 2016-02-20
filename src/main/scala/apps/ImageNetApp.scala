@@ -57,20 +57,19 @@ object ImageNetApp {
     var trainDF = sqlContext.createDataFrame(trainRDD.map{ case (a, b) => Row(a, b)}, schema)
     var testDF = sqlContext.createDataFrame(testRDD.map{ case (a, b) => Row(a, b)}, schema)
 
+    val numTrainData = trainDF.count()
+    logger.log("numTrainData = " + numTrainData.toString)
+    val numTestData = testDF.count()
+    logger.log("numTestData = " + numTestData.toString)
+
     logger.log("computing mean image")
     val meanImage = trainDF.map(row => row(0).asInstanceOf[Array[Byte]].map(e => e.toLong))
                            .reduce((a, b) => (a, b).zipped.map(_ + _))
-                           .map(e => e.toFloat)
+                           .map(e => (e.toDouble / numTrainData).toFloat)
 
     logger.log("coalescing") // if you want to shuffle your data, replace coalesce with repartition
     trainDF = trainDF.coalesce(numWorkers)
     testDF = testDF.coalesce(numWorkers)
-
-    val numTrainData = trainDF.count()
-    logger.log("numTrainData = " + numTrainData.toString)
-
-    val numTestData = testDF.count()
-    logger.log("numTestData = " + numTestData.toString)
 
     val trainPartitionSizes = trainDF.mapPartitions(iter => Array(iter.size).iterator).persist()
     val testPartitionSizes = testDF.mapPartitions(iter => Array(iter.size).iterator).persist()
