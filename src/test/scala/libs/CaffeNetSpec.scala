@@ -53,20 +53,7 @@ class CaffeNetSpec extends FlatSpec {
     val weightsBefore = net.getWeights()
     val outputs = net.forward(inputs.iterator)
     val weightsAfter = net.getWeights()
-
-    // check that the weights are unchanged
-    assert(weightsBefore.layerNames == weightsAfter.layerNames)
-    val layerNames = weightsBefore.layerNames
-    for (i <- 0 to weightsBefore.numLayers - 1) {
-      assert(weightsBefore.allWeights(layerNames(i)).length == weightsAfter.allWeights(layerNames(i)).length)
-      for (j <- 0 to weightsBefore.allWeights(layerNames(i)).length - 1) {
-        val weightBefore = weightsBefore.allWeights(layerNames(i))(j).toFlat
-        val weightAfter = weightsAfter.allWeights(layerNames(i))(j).toFlat
-        for (k <- 0 to weightBefore.length - 1) {
-          assert((weightBefore(k) - weightAfter(k)).abs <= 1e-6)
-        }
-      }
-    }
+    assert(WeightCollection.checkEqual(weightsBefore, weightsAfter, 1e-10F)) // weights should be equal
   }
 
   "Calling forwardBackward" should "leave weights unchanged" in {
@@ -78,19 +65,18 @@ class CaffeNetSpec extends FlatSpec {
     val weightsBefore = net.getWeights()
     net.forwardBackward(inputs.iterator)
     val weightsAfter = net.getWeights()
+    assert(WeightCollection.checkEqual(weightsBefore, weightsAfter, 1e-10F)) // weights should be equal
+  }
 
-    // check that the weights are unchanged
-    assert(weightsBefore.layerNames == weightsAfter.layerNames)
-    val layerNames = weightsBefore.layerNames
-    for (i <- 0 to weightsBefore.numLayers - 1) {
-      assert(weightsBefore.allWeights(layerNames(i)).length == weightsAfter.allWeights(layerNames(i)).length)
-      for (j <- 0 to weightsBefore.allWeights(layerNames(i)).length - 1) {
-        val weightBefore = weightsBefore.allWeights(layerNames(i))(j).toFlat
-        val weightAfter = weightsAfter.allWeights(layerNames(i))(j).toFlat
-        for (k <- 0 to weightBefore.length - 1) {
-          assert((weightBefore(k) - weightAfter(k)).abs <= 1e-6)
-        }
-      }
-    }
+  "Saving and loading the weights" should "leave the weights unchanged" in {
+    val netParam = new NetParameter()
+    ReadProtoFromTextFileOrDie(sparkNetHome + "/models/cifar10/cifar10_quick_train_test.prototxt", netParam)
+    val schema = StructType(StructField("data", ArrayType(FloatType), false) :: StructField("label", IntegerType) :: Nil)
+    val net1 = CaffeNet(netParam, schema, new DefaultPreprocessor(schema))
+    net1.saveWeightsToFile(sparkNetHome + "/temp/cifar10.caffemodel")
+    val net2 = CaffeNet(netParam, schema, new DefaultPreprocessor(schema))
+    assert(!WeightCollection.checkEqual(net1.getWeights(), net2.getWeights(), 1e-10F)) // weights should not be equal
+    net2.copyTrainedLayersFrom(sparkNetHome + "/temp/cifar10.caffemodel")
+    assert(WeightCollection.checkEqual(net1.getWeights(), net2.getWeights(), 1e-10F)) // weights should be equal
   }
 }

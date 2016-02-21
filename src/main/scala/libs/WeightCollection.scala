@@ -36,4 +36,25 @@ object WeightCollection extends java.io.Serializable {
     }
     return new WeightCollection(newWeights, layerNames)
   }
+
+  def checkEqual(wc1: WeightCollection, wc2: WeightCollection, tol: Float): Boolean = {
+    assert(wc1.layerNames == wc2.layerNames)
+    val layerNames = wc1.layerNames
+    //check that the WeightCollection objects have the same shape
+    for (i <- 0 to wc1.numLayers - 1) {
+      assert(wc1.allWeights(layerNames(i)).length == wc2.allWeights(layerNames(i)).length)
+      for (j <- 0 to wc1.allWeights(layerNames(i)).length - 1) {
+        assert(wc1.allWeights(layerNames(i))(j).shape.deep == wc2.allWeights(layerNames(i))(j).shape.deep)
+      }
+    }
+    // check that the weights are equal
+    for (i <- 0 to wc1.numLayers - 1) {
+      for (j <- 0 to wc1.allWeights(wc1.layerNames(i)).length - 1) {
+        if (!NDArray.checkEqual(wc1.allWeights(layerNames(i))(j), wc2.allWeights(layerNames(i))(j), tol)) {
+          return false
+        }
+      }
+    }
+    return true
+  }
 }

@@ -154,4 +154,23 @@ public class JavaNDArray implements java.io.Serializable {
     }
     indices[axis] += 1;
   }
+
+  public boolean equals(JavaNDArray that, float tol) {
+    if (!JavaNDUtils.shapesEqual(shape, that.shape)) {
+      return false;
+    }
+    int[] indices = new int[dim];
+    int index = 0;
+    // the whole method can be optimized when we have the default strides
+    for (int i = 0; i <= JavaNDUtils.arrayProduct(shape) - 2; i++) {
+      if (Math.abs(get(indices) - that.get(indices)) > tol) {
+        return false;
+      }
+      next(indices);
+    }
+    if (Math.abs(get(indices) - that.get(indices)) > tol) {
+      return false;
+    }
+    return true;
+  }
 }
