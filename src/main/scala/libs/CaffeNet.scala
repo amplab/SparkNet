@@ -1,5 +1,8 @@
 package libs
 
+import java.io._
+import java.nio.file.{Paths, Files}
+
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row}
 import org.bytedeco.javacpp.caffe._
@@ -144,6 +147,21 @@ class CaffeNet(netParam: NetParameter, schema: StructType, preprocessor: Preproc
         blob.cpu_data.put(flatWeights, 0, flatWeights.length)
       }
     }
+  }
+
+  def copyTrainedLayersFrom(filepath: String) = {
+    if (!Files.exists(Paths.get(filepath))) {
+      throw new IllegalArgumentException("The file " + filepath + " does not exist.\n")
+    }
+    caffeNet.CopyTrainedLayersFrom(filepath)
+  }
+
+  def saveWeightsToFile(filepath: String) = {
+    val f = new File(filepath)
+    f.getParentFile.mkdirs
+    val netParam = new NetParameter()
+    caffeNet.ToProto(netParam)
+    WriteProtoToBinaryFile(netParam, filepath)
   }
 
   def outputSchema(): StructType = {

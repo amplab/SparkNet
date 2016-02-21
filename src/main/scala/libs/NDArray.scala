@@ -64,4 +64,8 @@ object NDArray {
     v.add(v2)
     v
   }
+
+  def checkEqual(v1: NDArray, v2: NDArray, tol: Float): Boolean = {
+    return v1.javaArray.equals(v2.javaArray, tol)
+  }
 }
