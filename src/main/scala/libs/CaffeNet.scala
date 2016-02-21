@@ -41,7 +41,7 @@ class CaffeNet(netParam: NetParameter, schema: StructType, preprocessor: Preproc
 
   for (i <- 0 to inputSize - 1) {
     val name = netParam.input(i).getString
-    transformations(i) = preprocessor.convert(name, getInputShape(i))
+    transformations(i) = preprocessor.convert(name, JavaCPPUtils.getInputShape(netParam, i).drop(1)) // drop first index to ignore batchSize
     inputIndices(i) = columnNames.indexOf(name)
   }
 
@@ -60,11 +60,11 @@ class CaffeNet(netParam: NetParameter, schema: StructType, preprocessor: Preproc
   val inputBuffer = new Array[Array[Float]](inputSize)
   val inputBufferSize = new Array[Int](inputSize)
   for (i <- 0 to inputSize - 1) {
-    inputBufferSize(i) = getInputShape(i).product
+    inputBufferSize(i) = JavaCPPUtils.getInputShape(netParam, i).drop(1).product // drop 1 to ignore batchSize
     inputBuffer(i) = new Array[Float](inputBufferSize(i) * batchSize)
   }
 
-  def transformInto(iterator: Iterator[Row], data: FloatBlobVector): Unit = {
+  def transformInto(iterator: Iterator[Row], data: FloatBlobVector) = {
     var batchIndex = 0
     while (iterator.hasNext && batchIndex != batchSize) {
       val row = iterator.next
@@ -82,7 +82,7 @@ class CaffeNet(netParam: NetParameter, schema: StructType, preprocessor: Preproc
     }
   }
 
-  def forward(rowIt: Iterator[Row]): Map[String, NDArray] = {
+  def forward(rowIt: Iterator[Row], dataBlobNames: List[String] = List[String]()): Map[String, NDArray] = {
     // Caffe.set_mode(Caffe.GPU)
     transformInto(rowIt, inputs)
     val tops = caffeNet.Forward(inputs)
@@ -94,6 +94,13 @@ class CaffeNet(netParam: NetParameter, schema: StructType, preprocessor: Preproc
       val output = new Array[Float](shape.product)
       top.cpu_data().get(output, 0, shape.product)
       outputs += (outputName -> NDArray(output, shape))
+    }
+    for (name <- dataBlobNames) {
+      val floatBlob = caffeNet.blob_by_name(name)
+      if (floatBlob == null) {
+        throw new IllegalArgumentException("The net does not have a layer named " + name + ".\n")
+      }
+      outputs += (name -> JavaCPPUtils.floatBlobToNDArray(floatBlob))
     }
     return outputs
   }
@@ -116,7 +123,7 @@ class CaffeNet(netParam: NetParameter, schema: StructType, preprocessor: Preproc
       val weightList = MutableList[NDArray]()
       for (j <- 0 to numLayerBlobs(i) - 1) {
         val blob = caffeNet.layers().get(i).blobs().get(j)
-        val shape = getShape(blob)
+        val shape = JavaCPPUtils.getFloatBlobShape(blob)
         val data = new Array[Float](shape.product)
         blob.cpu_data.get(data, 0, data.length)
         weightList += NDArray(data, shape)
@@ -131,30 +138,12 @@ class CaffeNet(netParam: NetParameter, schema: StructType, preprocessor: Preproc
     for (i <- 0 to numLayers - 1) {
       for (j <- 0 to numLayerBlobs(i) - 1) {
         val blob = caffeNet.layers().get(i).blobs().get(j)
-        val shape = getShape(blob)
+        val shape = JavaCPPUtils.getFloatBlobShape(blob)
         assert(shape.deep == weights.allWeights(layerNames(i))(j).shape.deep) // check that weights are the correct shape
         val flatWeights = weights.allWeights(layerNames(i))(j).toFlat() // this allocation can be avoided
         blob.cpu_data.put(flatWeights, 0, flatWeights.length)
       }
     }
-  }
-
-  private def getShape(blob: FloatBlob): Array[Int] = {
-    val numAxes = blob.num_axes()
-    val shape = new Array[Int](numAxes)
-    for (k <- 0 to numAxes - 1) {
-      shape(k) = blob.shape(k)
-    }
-    return shape
-  }
-
-  private def getInputShape(i: Int): Array[Int] = {
-    val numAxes = netParam.input_shape(i).dim_size - 1
-    val shape = new Array[Int](numAxes)
-    for (j <- 0 to numAxes - 1) {
-      shape(j) = netParam.input_shape(i).dim(j + 1).toInt
-    }
-    return shape
   }
 
   def outputSchema(): StructType = {

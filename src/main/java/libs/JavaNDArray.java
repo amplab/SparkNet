@@ -10,7 +10,7 @@ public class JavaNDArray implements java.io.Serializable {
   private final int[] strides;
 
   public JavaNDArray(float[] data, int dim, int[] shape, int offset, int[] strides) {
-    assert(data.length == JavaNDUtils.arrayProduct(shape));
+    // TODO(rkn): check that all of the arguments are consistent with each other
     assert(shape.length == strides.length);
     this.data = data;
     this.dim = dim;

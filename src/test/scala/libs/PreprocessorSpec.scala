@@ -61,7 +61,7 @@ class PreprocessorSpec extends FlatSpec with BeforeAndAfterAll {
       case (t, v) => {
         val schema = StructType(StructField("x", t, false) :: Nil)
         val preprocessor = new DefaultPreprocessor(schema)
-        val convert = preprocessor.convert("x", Array[Int](1, 3))
+        val convert = preprocessor.convert("x", Array[Int](256, 256))
         var x = Row(v)
         val df = sqlContext.createDataFrame(sc.parallelize(Array(x)), schema)
         val startTime = System.currentTimeMillis()

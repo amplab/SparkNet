@@ -70,14 +70,12 @@ object CifarApp {
     val numTestData = testDF.count()
     logger.log("numTestData = " + numTestData.toString)
 
-    val trainPartitionSizes = trainDF.mapPartitions(iter => Array(iter.size).iterator).persist()
-    val testPartitionSizes = testDF.mapPartitions(iter => Array(iter.size).iterator).persist()
-    trainPartitionSizes.foreach(size => workerStore.put("trainPartitionSize", size))
-    testPartitionSizes.foreach(size => workerStore.put("testPartitionSize", size))
-    logger.log("trainPartitionSizes = " + trainPartitionSizes.collect().deep.toString)
-    logger.log("testPartitionSizes = " + testPartitionSizes.collect().deep.toString)
-
     val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
+
+    trainDF.foreachPartition(iter => workerStore.put("trainPartitionSize", iter.size))
+    testDF.foreachPartition(iter => workerStore.put("testPartitionSize", iter.size))
+    logger.log("trainPartitionSizes = " + workers.map(_ => workerStore.get[Int]("trainPartitionSize")).collect().deep.toString)
+    logger.log("testPartitionSizes = " + workers.map(_ => workerStore.get[Int]("testPartitionSize")).collect().deep.toString)
 
     // initialize nets on workers
     workers.foreach(_ => {
