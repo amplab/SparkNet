@@ -51,6 +51,9 @@ class NDArray private(val javaArray: JavaNDArray) extends java.io.Serializable {
 
 object NDArray {
   def apply(data: Array[Float], shape: Array[Int]) = {
+    if (data.length != shape.product) {
+      throw new IllegalArgumentException("The data and shape arguments are not compatible, data.length = " + data.length.toString + " and shape = " + shape.deep + ".\n")
+    }
     new NDArray(new JavaNDArray(data, shape:_*))
   }
 
