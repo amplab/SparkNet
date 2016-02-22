@@ -1,65 +1,69 @@
 Creating JAR files for JavaCPP
 ==============================
 
-This document describes how we create the JAR files for JavaCPP. The actual
-libraries are linked in Cent OS 6 so that we are binary compatible across a wide
-variety of distributions (as suggested in [the JavaCPP wiki](https://github.com/bytedeco/javacpp-presets/wiki/Build-Environments)). We
-build binaries for Caffe and also TensorFlow, which requires Bazel.
+This document describes how we create the JAR files for JavaCPP. The libraries
+are build in Ubuntu 12.04 so that we are binary compatible across a wide variety
+of distributions. We build binaries for Caffe and also TensorFlow, which
+requires Bazel.
 
-Start an EC2 AMI with Ubuntu 14.04 and run these commands:
+Start an EC2 AMI with Ubuntu 12.04 and run these commands:
 
 ```
-wget http://developer.download.nvidia.com/compute/cuda/7_0/Prod/local_installers/rpmdeb/cuda-repo-ubuntu1404-7-0-local_7.0-28_amd64.deb
-sudo dpkg -i cuda-repo-ubuntu1404-7-0-local_7.0-28_amd64.deb
+wget http://developer.download.nvidia.com/compute/cuda/7_0/Prod/local_installers/rpmdeb/cuda-repo-ubuntu1204-7-0-local_7.0-28_amd64.deb
+sudo dpkg -i cuda-repo-ubuntu1204-7-0-local_7.0-28_amd64.deb
 sudo apt-get update
 sudo apt-get upgrade -y
-```
-
-Apply the DRM module workaround from [the Caffe wiki](https://github.com/BVLC/caffe/wiki/Caffe-on-EC2-Ubuntu-14.04-Cuda-7) and install CUDA:
-```
-sudo apt-get install -y linux-image-extra-`uname -r` linux-headers-`uname -r` linux-image-`uname -r`
 sudo apt-get install cuda -y
 ```
 
-Install docker:
+Make sure CUDA is found by Caffe and TensorFlow:
 
 ```
-sudo apt-get install docker.io
+sudo ln -s /usr/local/cuda-7.0 /usr/local/cuda
 ```
 
-Launch Cent OS 6 via Docker:
+Install CuDNN: Download `cudnn-7.0-linux-x64-v4.0-rc.tgzcudnn-7.0-linux-x64-v4.0-rc.tgz` from the CuDNN website and run:
 
 ```
-sudo docker run -it -v /usr/local/cuda:/usr/local/cuda centos:6 /bin/bash
+tar -zxf cudnn-7.0-linux-x64-v4.0-rc.tgz
+cd cuda
+sudo cp lib64/* /usr/local/cuda/lib64/
+sudo cp include/cudnn.h /usr/local/cuda/include/
 ```
 
-Inside of docker, run the following commands:
+Install some development tools needed in subsequent steps:
 
-Install dev tools:
 ```
-cd /root/
-wget https://www.softwarecollections.org/en/scls/rhscl/rh-java-common/epel-6-x86_64/download/rhscl-rh-java-common-epel-6-x86_64.noarch.rpm
-wget https://www.softwarecollections.org/en/scls/rhscl/maven30/epel-6-x86_64/download/rhscl-maven30-epel-6-x86_64.noarch.rpm
-wget https://www.softwarecollections.org/en/scls/rhscl/python27/epel-6-x86_64/download/rhscl-python27-epel-6-x86_64.noarch.rpm
-yum install scl-utils *.rpm
-wget https://linuxsoft.cern.ch/cern/devtoolset/slc6-devtoolset.repo --no-check-certificate
-rpm --import http://linuxsoft.cern.ch/cern/slc6X/x86_64/RPM-GPG-KEY-cern
-yum install devtoolset-2 maven30 python27
-scl enable devtoolset-2 maven30 python27 bash
+sudo apt-get install python-pip python-dev build-essential git zip zlib1g-dev cmake gfortran maven
+pip install numpy
 ```
 
-Install JDK 8 which is required for building Bazel:
+Install and activate the JDK 8:
+
 ```
-yum install git wget unzip cmake
-wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u72-b15/jdk-8u72-linux-x64.tar.gz"
-tar xzf jdk-8u72-linux-x64.tar.gz
-cd /opt/jdk1.8.0_72/
-alternatives --install /usr/bin/java java /opt/jdk1.8.0_72/bin/java 2
-alternatives --install /usr/bin/javac javac /opt/jdk1.8.0_72/bin/javac 2
+sudo add-apt-repository ppa:openjdk-r/ppa
+# When prompted you'll need to press ENTER to continue
+sudo apt-get update
+sudo apt-get install -y openjdk-8-jdk
+
+sudo update-alternatives --config java
+sudo update-alternatives --config javac
 ```
 
-Install Bazel:
+Install and activate gcc-4.9:
+
 ```
+sudo apt-get install python-software-properties
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt-get update
+sudo apt-get install g++-4.9
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 50
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 50
+```
+
+Install Bazel (needs JDK 8):
+```
+cd ~
 git clone https://github.com/bazelbuild/bazel.git
 cd bazel
 git checkout tags/0.1.4
@@ -69,6 +73,7 @@ sudo cp output/bazel /usr/bin
 
 Install JavaCPP:
 ```
+cd ~
 git clone https://github.com/bytedeco/javacpp.git
 cd javacpp
 mvn install
@@ -76,7 +81,9 @@ mvn install
 
 Install the JavaCPP presets:
 ```
+cd ~
 git clone https://github.com/bytedeco/javacpp-presets.git
 cd javacpp-presets
 bash cppbuild.sh install opencv caffe tensorflow
+mvn install --projects=.,opencv,caffe,tensorflow -Djavacpp.platform.dependency=false
 ```
