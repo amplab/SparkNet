@@ -1,6 +1,7 @@
 # SparkNet
 Distributed Neural Networks for Spark.
 Details are available in the [paper](http://arxiv.org/abs/1511.06051).
+Ask questions on the [sparknet-users mailing list](https://groups.google.com/forum/#!forum/sparknet-users)!
 
 ## Quick Start
 **Start a Spark cluster using our AMI**
