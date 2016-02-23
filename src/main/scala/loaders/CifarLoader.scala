@@ -34,19 +34,22 @@ class CifarLoader(path: String) {
   val trainPerm = Vector() ++ r.shuffle(indices)
   val testPerm = Vector() ++ ((0 to batchSize) toIterable)
 
-  def getListOfFiles(dir: String) : List[File] = {
-    val d = new File(dir)
-    if (d.exists && d.isDirectory) {
-      d.listFiles.filter(_.getName().split('.').last == "bin").toList
-    } else {
-      List[File]()
+  val d = new File(path)
+  if (!d.exists) {
+    throw new Exception("The path " + path + " does not exist.")
+  }
+  if (!d.isDirectory) {
+    throw new Exception("The path " + path + " is not a directory.")
+  }
+  val cifar10Files = List("data_batch_1.bin", "data_batch_2.bin", "data_batch_3.bin", "data_batch_4.bin", "data_batch_5.bin", "test_batch.bin")
+  for (filename <- cifar10Files) {
+    if (!d.list.contains(filename)) {
+      throw new Exception("The directory " + path + " does not contain all of the Cifar10 data. Please run `bash $SPARKNET_HOME/data/cifar10/get_cifar10.sh` to obtain the Cifar10 data.")
     }
   }
 
-  val fullFileList = getListOfFiles(path)
-
+  val fullFileList = d.listFiles.filter(_.getName().split('.').last == "bin").toList
   val testFile = fullFileList.find(x => x.getName().split('/').last == "test_batch.bin").head
-
   val fileList = fullFileList diff List(testFile)
 
   for (i <- 0 to nBatches - 1) {
