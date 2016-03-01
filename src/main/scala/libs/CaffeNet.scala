@@ -20,12 +20,12 @@ trait NetInterface {
 }
 
 object CaffeNet {
-  def apply(netParam: NetParameter, schema: StructType, preprocessor: Preprocessor): CaffeNet = {
+  def apply(netParam: NetParameter, schema: StructType, preprocessor: CaffePreprocessor): CaffeNet = {
     return new CaffeNet(netParam, schema, preprocessor, new FloatNet(netParam))
   }
 }
 
-class CaffeNet(netParam: NetParameter, schema: StructType, preprocessor: Preprocessor, caffeNet: FloatNet) {
+class CaffeNet(netParam: NetParameter, schema: StructType, preprocessor: CaffePreprocessor, caffeNet: FloatNet) {
   private val inputSize = netParam.input_size
   private val batchSize = netParam.input_shape(0).dim(0).toInt
   private val transformations = new Array[Any => NDArray](inputSize)
