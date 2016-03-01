@@ -4,9 +4,9 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.MutableList
 
 object TensorFlowWeightCollection {
-	def scalarDivide(weights: Map[String, NDArray], v: Float) = {
+	def scale(weights: Map[String, NDArray], v: Float) = {
 		for (name <- weights.keys) {
-      weights(name).scalarDivide(v)
+      weights(name).scale(v)
     }
 	}
 

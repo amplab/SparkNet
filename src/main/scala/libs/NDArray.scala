@@ -44,8 +44,8 @@ class NDArray private(val javaArray: JavaNDArray) extends java.io.Serializable {
     javaArray.subtract(that.javaArray)
   }
 
-  def scalarDivide(v: Float) = {
-    javaArray.scalarDivide(v)
+  def scale(v: Float) = {
+    javaArray.scale(v)
   }
 }
 

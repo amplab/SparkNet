@@ -139,15 +139,15 @@ public class JavaNDArray implements java.io.Serializable {
     set(indices, get(indices) - that.get(indices));
   }
 
-  public void scalarDivide(float v) {
+  public void scale(float v) {
     int[] indices = new int[dim];
     int index = 0;
     // the whole method can be optimized when we have the default strides
     for (int i = 0; i <= JavaNDUtils.arrayProduct(shape) - 2; i++) {
-      set(indices, get(indices) / v); // this can be made faster
+      set(indices, get(indices) * v); // this can be made faster
       next(indices);
     }
-    set(indices, get(indices) / v);
+    set(indices, get(indices) * v);
   }
 
   private void next(int[] indices) {

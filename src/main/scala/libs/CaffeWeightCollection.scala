@@ -4,10 +4,10 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.MutableList
 
 object CaffeWeightCollection {
-  def scalarDivide(weights: Map[String, MutableList[NDArray]], v: Float) = {
+  def scale(weights: Map[String, MutableList[NDArray]], v: Float) = {
     for (name <- weights.keys) {
       for (j <- 0 to weights(name).length - 1) {
-        weights(name)(j).scalarDivide(v)
+        weights(name)(j).scale(v)
       }
     }
   }
