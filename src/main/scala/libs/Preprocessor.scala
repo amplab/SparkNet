@@ -6,7 +6,7 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row}
 import scala.collection.mutable._
 
-trait Preprocessor {
+trait CaffePreprocessor {
   def convert(name: String, shape: Array[Int]): Any => NDArray
 }
 
@@ -19,7 +19,7 @@ trait TensorFlowPreprocessor {
 // implementation in DefaultPreprocessor is slow and does unnecessary
 // allocation. This is designed to be easier to understand, whereas the
 // ImageNetPreprocessor is designed to be faster.
-class DefaultPreprocessor(schema: StructType) extends Preprocessor {
+class DefaultPreprocessor(schema: StructType) extends CaffePreprocessor {
   def convert(name: String, shape: Array[Int]): Any => NDArray = {
     schema(name).dataType match {
       case FloatType => (element: Any) => {
@@ -51,7 +51,7 @@ class DefaultPreprocessor(schema: StructType) extends Preprocessor {
   }
 }
 
-class ImageNetPreprocessor(schema: StructType, meanImage: Array[Float], fullHeight: Int = 256, fullWidth: Int = 256, croppedHeight: Int = 227, croppedWidth: Int = 227) extends Preprocessor {
+class ImageNetPreprocessor(schema: StructType, meanImage: Array[Float], fullHeight: Int = 256, fullWidth: Int = 256, croppedHeight: Int = 227, croppedWidth: Int = 227) extends CaffePreprocessor {
   def convert(name: String, shape: Array[Int]): Any => NDArray = {
     schema(name).dataType match {
       case IntegerType => (element: Any) => {

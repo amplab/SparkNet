@@ -8,7 +8,7 @@ trait Solver {
   def step(rowIt: Iterator[Row])
 }
 
-class CaffeSolver(solverParam: SolverParameter, schema: StructType, preprocessor: Preprocessor) extends FloatSGDSolver(solverParam) {
+class CaffeSolver(solverParam: SolverParameter, schema: StructType, preprocessor: CaffePreprocessor) extends FloatSGDSolver(solverParam) {
 
   val trainNet = new CaffeNet(solverParam.net_param, schema, preprocessor, net())
 
