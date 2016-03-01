@@ -3,14 +3,6 @@ package libs
 import scala.collection.mutable.Map
 import scala.collection.mutable.MutableList
 
-class TensorFlowWeightCollection(val weights: Map[String, NDArray]) extends java.io.Serializable {
-  def scalarDivide(v: Float) = {
-    for (name <- weights.keys) {
-      weights(name).scalarDivide(v)
-    }
-  }
-}
-
 object TensorFlowWeightCollection {
 	def scalarDivide(weights: Map[String, NDArray], v: Float) = {
 		for (name <- weights.keys) {
