@@ -4,17 +4,23 @@ assemblySettings
 
 classpathTypes += "maven-plugin"
 
+// resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
+
 resolvers += "javacpp" at "http://www.eecs.berkeley.edu/~rkn/temp/"
 
-libraryDependencies += "org.bytedeco" % "javacpp" % "1.2-SNAPSHOT"
+libraryDependencies += "org.bytedeco" % "javacpp" % "1.2-SPARKNET"
 
-libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.2-SNAPSHOT"
+libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.2-SPARKNET"
 
-libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.2-SNAPSHOT" classifier "linux-x86_64"
+libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.2-SPARKNET" classifier "linux-x86_64"
 
-libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.1.0-1.2-SNAPSHOT"
+libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.1.0-1.2-SPARKNET"
 
-libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.1.0-1.2-SNAPSHOT" classifier "linux-x86_64"
+libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.1.0-1.2-SPARKNET" classifier "linux-x86_64"
+
+libraryDependencies += "org.bytedeco.javacpp-presets" % "tensorflow" % "master-1.2-SPARKNET"
+
+libraryDependencies += "org.bytedeco.javacpp-presets" % "tensorflow" % "master-1.2-SPARKNET" classifier "linux-x86_64"
 
 // libraryDependencies += "org.bytedeco" % "javacpp" % "1.1"
 

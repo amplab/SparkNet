@@ -10,6 +10,10 @@ trait Preprocessor {
   def convert(name: String, shape: Array[Int]): Any => NDArray
 }
 
+trait TensorFlowPreprocessor {
+  def convert(name: String, shape: Array[Int]): Any => Any
+}
+
 // The convert method in DefaultPreprocessor is used to convert data extracted
 // from a dataframe into an NDArray, which can then be passed into a net. The
 // implementation in DefaultPreprocessor is slow and does unnecessary
@@ -72,6 +76,35 @@ class ImageNetPreprocessor(schema: StructType, meanImage: Array[Float], fullHeig
           val widthOffset = Random.nextInt(fullWidth - croppedWidth + 1)
           NDArray(buffer.clone, Array[Int](shape(0), fullHeight, fullWidth)).subarray(Array[Int](0, heightOffset, widthOffset), Array[Int](shape(0), heightOffset + croppedHeight, widthOffset + croppedWidth))
           // TODO(rkn): probably don't want to call buffer.clone
+        }
+      }
+    }
+  }
+}
+
+class DefaultTensorFlowPreprocessor(schema: StructType) extends TensorFlowPreprocessor {
+  def convert(name: String, shape: Array[Int]): Any => Any = {
+    schema(name).dataType match {
+      case FloatType => (element: Any) => {
+        Array[Float](element.asInstanceOf[Float])
+      }
+      case DoubleType => (element: Any) => {
+        Array[Double](element.asInstanceOf[Double])
+      }
+      case IntegerType => (element: Any) => {
+        Array[Int](element.asInstanceOf[Int])
+      }
+      case LongType => (element: Any) => {
+        Array[Long](element.asInstanceOf[Long])
+      }
+      case BinaryType => (element: Any) => {
+        element.asInstanceOf[Array[Byte]]
+      }
+      case ArrayType(FloatType, true) => (element: Any) => {
+        element match {
+          case element: Array[Float] => element.asInstanceOf[Array[Float]]
+          case element: WrappedArray[Float] => element.asInstanceOf[WrappedArray[Float]].toArray
+          case element: ArrayBuffer[Float] => element.asInstanceOf[ArrayBuffer[Float]].toArray
         }
       }
     }
