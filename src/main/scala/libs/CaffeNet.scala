@@ -14,8 +14,8 @@ import java.util.Arrays
 trait NetInterface {
   def forward(rowIt: Iterator[Row]): Array[Row]
   def forwardBackward(rowIt: Iterator[Row])
-  def getWeights(): WeightCollection
-  def setWeights(weights: WeightCollection)
+  def getWeights(): Map[String, MutableList[NDArray]]
+  def setWeights(weights: Map[String, MutableList[NDArray]])
   def outputSchema(): StructType
 }
 
@@ -120,7 +120,7 @@ class CaffeNet(netParam: NetParameter, schema: StructType, preprocessor: CaffePr
     print("ForwardBackward took " + ((t3 - t2) * 1F / 1000F).toString + " s\n")
   }
 
-  def getWeights(): WeightCollection = {
+  def getWeights(): Map[String, MutableList[NDArray]] = {
     val weights = Map[String, MutableList[NDArray]]()
     for (i <- 0 to numLayers - 1) {
       val weightList = MutableList[NDArray]()
@@ -133,17 +133,17 @@ class CaffeNet(netParam: NetParameter, schema: StructType, preprocessor: CaffePr
       }
       weights += (layerNames(i) -> weightList)
     }
-    return new WeightCollection(weights, layerNames)
+    return weights
   }
 
-  def setWeights(weights: WeightCollection) = {
-    assert(weights.numLayers == numLayers)
+  def setWeights(weights: Map[String, MutableList[NDArray]]) = {
+    assert(weights.keys.size == numLayers)
     for (i <- 0 to numLayers - 1) {
       for (j <- 0 to numLayerBlobs(i) - 1) {
         val blob = caffeNet.layers().get(i).blobs().get(j)
         val shape = JavaCPPUtils.getFloatBlobShape(blob)
-        assert(shape.deep == weights.allWeights(layerNames(i))(j).shape.deep) // check that weights are the correct shape
-        val flatWeights = weights.allWeights(layerNames(i))(j).toFlat() // this allocation can be avoided
+        assert(shape.deep == weights(layerNames(i))(j).shape.deep) // check that weights are the correct shape
+        val flatWeights = weights(layerNames(i))(j).toFlat() // this allocation can be avoided
         blob.cpu_data.put(flatWeights, 0, flatWeights.length)
       }
     }
