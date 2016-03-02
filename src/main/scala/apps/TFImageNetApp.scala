@@ -136,7 +136,7 @@ object TFImageNetApp {
       logger.log("collecting weights", i)
       netWeights = workers.map(_ => { workerStore.get[TensorFlowNet]("net").getWeights() }).reduce((a, b) => TensorFlowWeightCollection.add(a, b))
       TensorFlowWeightCollection.scalarDivide(netWeights, 1F * numWorkers)
-      logger.log("weight = " + netWeights("conv1").toFlat()(0).toString, i)
+      logger.log("weight = " + netWeights("fc6W").toFlat()(0).toString, i)
       i += 1
     }
 
