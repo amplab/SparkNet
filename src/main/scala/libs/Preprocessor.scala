@@ -10,6 +10,10 @@ trait Preprocessor {
   def convert(name: String, shape: Array[Int]): Any => NDArray
 }
 
+trait TensorFlowPreprocessor {
+  def convert(name: String, shape: Array[Int]): Any => Any
+}
+
 // The convert method in DefaultPreprocessor is used to convert data extracted
 // from a dataframe into an NDArray, which can then be passed into a net. The
 // implementation in DefaultPreprocessor is slow and does unnecessary
@@ -63,7 +67,7 @@ class ImageNetPreprocessor(schema: StructType, meanImage: Array[Float], fullHeig
             case element: Array[Byte] => {
               var index = 0
               while (index < 3 * fullHeight * fullWidth) {
-                buffer(index) = (element(index) & 0XFF).toFloat - meanImage(index)
+                buffer(index) = (element(index) & 0xFF).toFloat - meanImage(index)
                 index += 1
               }
             }
@@ -74,6 +78,60 @@ class ImageNetPreprocessor(schema: StructType, meanImage: Array[Float], fullHeig
           // TODO(rkn): probably don't want to call buffer.clone
         }
       }
+    }
+  }
+}
+
+class DefaultTensorFlowPreprocessor(schema: StructType) extends TensorFlowPreprocessor {
+  def convert(name: String, shape: Array[Int]): Any => Any = {
+    schema(name).dataType match {
+      case FloatType => (element: Any) => {
+        Array[Float](element.asInstanceOf[Float])
+      }
+      case DoubleType => (element: Any) => {
+        Array[Double](element.asInstanceOf[Double])
+      }
+      case IntegerType => (element: Any) => {
+        Array[Int](element.asInstanceOf[Int])
+      }
+      case LongType => (element: Any) => {
+        Array[Long](element.asInstanceOf[Long])
+      }
+      case BinaryType => (element: Any) => {
+        element.asInstanceOf[Array[Byte]]
+      }
+      case ArrayType(FloatType, true) => (element: Any) => {
+        element match {
+          case element: Array[Float] => element.asInstanceOf[Array[Float]]
+          case element: WrappedArray[Float] => element.asInstanceOf[WrappedArray[Float]].toArray
+          case element: ArrayBuffer[Float] => element.asInstanceOf[ArrayBuffer[Float]].toArray
+        }
+      }
+    }
+  }
+}
+
+class ImageNetTensorFlowPreprocessor(schema: StructType, meanImage: Array[Float], fullHeight: Int = 256, fullWidth: Int = 256, croppedHeight: Int = 227, croppedWidth: Int = 227) extends TensorFlowPreprocessor {
+  def convert(name: String, shape: Array[Int]): Any => Any = {
+    if (name == "label") {
+      (element: Any) => {
+        Array[Int](element.asInstanceOf[Int])
+      }
+    } else if (name == "data") {
+      val buffer = new Array[Float](3 * fullHeight * fullWidth)
+      (element: Any) => {
+        val array = element.asInstanceOf[Array[Byte]]
+        var index = 0
+        while (index < 3 * fullHeight * fullWidth) {
+          buffer(index) = (array(index) & 0xFF).toFloat - meanImage(index)
+          index += 1
+        }
+        val heightOffset = Random.nextInt(fullHeight - croppedHeight + 1)
+        val widthOffset = Random.nextInt(fullWidth - croppedWidth + 1)
+        NDArray(buffer.clone, Array[Int](shape(0), fullHeight, fullWidth)).subarray(Array[Int](0, heightOffset, widthOffset), Array[Int](shape(0), heightOffset + croppedHeight, widthOffset + croppedWidth))
+      }
+    } else {
+      throw new Exception("The name is not `label` or `data`, name = " + name + "\n")
     }
   }
 }
