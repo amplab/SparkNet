@@ -16,7 +16,7 @@ Ask questions on the [sparknet-users mailing list](https://groups.google.com/for
                                --region=eu-west-1 \
                                --zone=eu-west-1c \
                                --instance-type=g2.8xlarge \
-                               --ami=ami-c573c1b6 \
+                               --ami=ami-d0833da3 \
                                --copy-aws-credentials \
                                --spark-version=1.5.0 \
                                --spot-price=1.5 \
