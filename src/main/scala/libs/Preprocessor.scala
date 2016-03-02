@@ -118,17 +118,19 @@ class ImageNetTensorFlowPreprocessor(schema: StructType, meanImage: Array[Float]
         Array[Int](element.asInstanceOf[Int])
       }
     } else if (name == "data") {
-      val buffer = new Array[Float](3 * fullHeight * fullWidth)
+      val buffer = new Array[Float](fullHeight * fullWidth * 3)
       (element: Any) => {
         val array = element.asInstanceOf[Array[Byte]]
         var index = 0
-        while (index < 3 * fullHeight * fullWidth) {
-          buffer(index) = (array(index) & 0xFF).toFloat - meanImage(index)
+        while (index < fullHeight * fullWidth) {
+          buffer(3 * index + 0) = (array(0 * fullHeight * fullWidth + index) & 0xFF).toFloat - meanImage(0 * fullHeight * fullWidth + index)
+          buffer(3 * index + 1) = (array(1 * fullHeight * fullWidth + index) & 0xFF).toFloat - meanImage(1 * fullHeight * fullWidth + index)
+          buffer(3 * index + 2) = (array(2 * fullHeight * fullWidth + index) & 0xFF).toFloat - meanImage(2 * fullHeight * fullWidth + index)
           index += 1
         }
         val heightOffset = Random.nextInt(fullHeight - croppedHeight + 1)
         val widthOffset = Random.nextInt(fullWidth - croppedWidth + 1)
-        NDArray(buffer.clone, Array[Int](shape(0), fullHeight, fullWidth)).subarray(Array[Int](0, heightOffset, widthOffset), Array[Int](shape(0), heightOffset + croppedHeight, widthOffset + croppedWidth))
+        NDArray(buffer.clone, Array[Int](fullHeight, fullWidth, shape(2))).subarray(Array[Int](heightOffset, widthOffset, 0), Array[Int](heightOffset + croppedHeight, widthOffset + croppedWidth, shape(2))).toFlat()
       }
     } else {
       throw new Exception("The name is not `label` or `data`, name = " + name + "\n")
