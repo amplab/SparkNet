@@ -6,6 +6,7 @@ import org.bytedeco.javacpp.caffe._
 
 import libs._
 
+@Ignore
 class CaffeNetSpec extends FlatSpec {
   val sparkNetHome = sys.env("SPARKNET_HOME")
 

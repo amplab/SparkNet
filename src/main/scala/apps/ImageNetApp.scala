@@ -40,6 +40,7 @@ object ImageNetApp {
       .setAppName("ImageNet")
       .set("spark.driver.maxResultSize", "30G")
       .set("spark.task.maxFailures", "1")
+      .setExecutorEnv("LD_LIBRARY_PATH", sys.env("LD_LIBRARY_PATH"))
 
     val sc = new SparkContext(conf)
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)

@@ -80,7 +80,12 @@ The flag `--slaves` specifies the number of Spark workers.
     ```
     ssh -i ~/.ssh/key.pem ubuntu@xxx.xx.xx.xxx
     ```
-3. Install an editor `sudo apt-get install emacs`.
+3. Install an editor
+
+    ```
+    sudo apt-get update
+    sudo apt-get install emacs
+    ```
 4. Open the file
 
     ```
@@ -93,23 +98,36 @@ The flag `--slaves` specifies the number of Spark workers.
     ```
     ssh -i ~/.ssh/key.pem root@xxx.xx.xx.xxx
     ```
-7. Intall CUDA-7.5. [The best instructions I've found are here](http://tleyden.github.io/blog/2015/11/22/cuda-7-dot-5-on-aws-gpu-instance-running-ubuntu-14-dot-04/).
-8. `echo "/usr/local/cuda-7.5/targets/x86_64-linux/lib/" > /etc/ld.so.conf.d/cuda.conf`
-9. `ldconfig`
+7. Install CUDA-7.0.
+
+    ```
+    wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1404/x86_64/cuda-repo-ubuntu1404_7.0-28_amd64.deb
+    dpkg -i cuda-repo-ubuntu1404_7.0-28_amd64.deb
+    apt-get update
+    apt-get upgrade -y
+    apt-get install -y linux-image-extra-`uname -r` linux-headers-`uname -r` linux-image-`uname -r`
+    apt-get install cuda-7-0 -y
+    ```
 10. Install sbt. [Instructions here](http://www.scala-sbt.org/0.13/docs/Installing-sbt-on-Linux.html).
 11. `apt-get update`
 12. `apt-get install awscli s3cmd`
 13. Install Java `apt-get install openjdk-7-jdk`.
 14. Clone the SparkNet repository `git clone https://github.com/amplab/SparkNet.git` in your home directory.
-15. Build SparkNet with `cd ~/SparkNet` and `sbt assemble`.
-16. Add the following to your `~/.bashrc`:
+15. Add the following to your `~/.bashrc`, and run `source ~/.bashrc`.
 
     ```
-    export LD_LIBRARY_PATH=/usr/local/cuda-7.5/targets/x86_64-linux/lib
+    export LD_LIBRARY_PATH=/usr/local/cuda-7.0/targets/x86_64-linux/lib/
     export _JAVA_OPTIONS=-Xmx8g
     export SPARKNET_HOME=/root/SparkNet/
     ```
-    Some of these paths may need to be adapted, but the `LD_LIBRARY_PATH` directory should contain `libcudart.so.7.5` (this file can be found with `locate libcudart.so.7.5` after running `updatedb`).
+    Some of these paths may need to be adapted, but the `LD_LIBRARY_PATH` directory should contain `libcudart.so.7.0` (this file can be found with `locate libcudart.so.7.0` after running `updatedb`).
+16. Build SparkNet with
+
+    ```
+    cd ~/SparkNet
+    git pull
+    sbt assemble
+    ```
 17. Create the file `~/.bash_profile` and add the following:
 
     ```
