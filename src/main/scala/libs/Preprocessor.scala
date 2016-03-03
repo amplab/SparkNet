@@ -11,7 +11,7 @@ trait Preprocessor {
 }
 
 trait TensorFlowPreprocessor {
-  def convert(name: String, shape: Array[Int]): Any => Any
+  def convert(name: String, shape: Array[Int]): (Any, Any) => Unit
 }
 
 // The convert method in DefaultPreprocessor is used to convert data extracted
@@ -83,28 +83,64 @@ class ImageNetPreprocessor(schema: StructType, meanImage: Array[Float], fullHeig
 }
 
 class DefaultTensorFlowPreprocessor(schema: StructType) extends TensorFlowPreprocessor {
-  def convert(name: String, shape: Array[Int]): Any => Any = {
+  def convert(name: String, shape: Array[Int]): (Any, Any) => Unit = {
     schema(name).dataType match {
-      case FloatType => (element: Any) => {
-        Array[Float](element.asInstanceOf[Float])
+      case FloatType => (element: Any, buffer: Any) => {
+        val e = element.asInstanceOf[Float]
+        val b = buffer.asInstanceOf[Array[Float]]
+        b(0) = e
       }
-      case DoubleType => (element: Any) => {
-        Array[Double](element.asInstanceOf[Double])
+      case DoubleType => (element: Any, buffer: Any) => {
+        val e = element.asInstanceOf[Double]
+        val b = buffer.asInstanceOf[Array[Double]]
+        b(0) = e
       }
-      case IntegerType => (element: Any) => {
-        Array[Int](element.asInstanceOf[Int])
+      case IntegerType => (element: Any, buffer: Any) => {
+        val e = element.asInstanceOf[Int]
+        val b = buffer.asInstanceOf[Array[Int]]
+        b(0) = e
       }
-      case LongType => (element: Any) => {
-        Array[Long](element.asInstanceOf[Long])
+      case LongType => (element: Any, buffer: Any) => {
+        val e = element.asInstanceOf[Long]
+        val b = buffer.asInstanceOf[Array[Long]]
+        b(0) = e
       }
-      case BinaryType => (element: Any) => {
-        element.asInstanceOf[Array[Byte]]
+      case BinaryType => (element: Any, buffer: Any) => {
+        val e = element.asInstanceOf[Array[Byte]]
+        val b = buffer.asInstanceOf[Array[Byte]]
+        var i = 0
+        while (i < b.length) {
+          b(i) = e(i)
+          i += 1
+        }
       }
-      case ArrayType(FloatType, true) => (element: Any) => {
+      case ArrayType(FloatType, true) => (element: Any, buffer: Any) => {
+        val b = buffer.asInstanceOf[Array[Float]]
         element match {
-          case element: Array[Float] => element.asInstanceOf[Array[Float]]
-          case element: WrappedArray[Float] => element.asInstanceOf[WrappedArray[Float]].toArray
-          case element: ArrayBuffer[Float] => element.asInstanceOf[ArrayBuffer[Float]].toArray
+          case element: Array[Float] => {
+            val e = element.asInstanceOf[Array[Float]]
+            var i = 0
+            while (i < b.length) {
+              b(i) = e(i)
+              i += 1
+            }
+          }
+          case element: WrappedArray[Float] => {
+            val e = element.asInstanceOf[WrappedArray[Float]]
+            var i = 0
+            while (i < b.length) {
+              b(i) = e(i)
+              i += 1
+            }
+          }
+          case element: ArrayBuffer[Float] => {
+            val e = element.asInstanceOf[ArrayBuffer[Float]]
+            var i = 0
+            while (i < b.length) {
+              b(i) = e(i)
+              i += 1
+            }
+          }
         }
       }
     }
@@ -112,25 +148,28 @@ class DefaultTensorFlowPreprocessor(schema: StructType) extends TensorFlowPrepro
 }
 
 class ImageNetTensorFlowPreprocessor(schema: StructType, meanImage: Array[Float], fullHeight: Int = 256, fullWidth: Int = 256, croppedHeight: Int = 227, croppedWidth: Int = 227) extends TensorFlowPreprocessor {
-  def convert(name: String, shape: Array[Int]): Any => Any = {
+  def convert(name: String, shape: Array[Int]): (Any, Any) => Unit = {
     if (name == "label") {
-      (element: Any) => {
-        Array[Int](element.asInstanceOf[Int])
+      (element: Any, buffer: Any) => {
+        val e = element.asInstanceOf[Int]
+        val b = buffer.asInstanceOf[Array[Int]]
+        b(0) = e
       }
     } else if (name == "data") {
-      val buffer = new Array[Float](fullHeight * fullWidth * 3)
-      (element: Any) => {
-        val array = element.asInstanceOf[Array[Byte]]
+      val tempBuffer = new Array[Float](fullHeight * fullWidth * 3)
+      (element: Any, buffer: Any) => {
+        val e = element.asInstanceOf[Array[Byte]]
+        val b = buffer.asInstanceOf[Array[Float]]
         var index = 0
         while (index < fullHeight * fullWidth) {
-          buffer(3 * index + 0) = (array(0 * fullHeight * fullWidth + index) & 0xFF).toFloat - meanImage(0 * fullHeight * fullWidth + index)
-          buffer(3 * index + 1) = (array(1 * fullHeight * fullWidth + index) & 0xFF).toFloat - meanImage(1 * fullHeight * fullWidth + index)
-          buffer(3 * index + 2) = (array(2 * fullHeight * fullWidth + index) & 0xFF).toFloat - meanImage(2 * fullHeight * fullWidth + index)
+          tempBuffer(3 * index + 0) = (e(0 * fullHeight * fullWidth + index) & 0xFF).toFloat - meanImage(0 * fullHeight * fullWidth + index)
+          tempBuffer(3 * index + 1) = (e(1 * fullHeight * fullWidth + index) & 0xFF).toFloat - meanImage(1 * fullHeight * fullWidth + index)
+          tempBuffer(3 * index + 2) = (e(2 * fullHeight * fullWidth + index) & 0xFF).toFloat - meanImage(2 * fullHeight * fullWidth + index)
           index += 1
         }
         val heightOffset = Random.nextInt(fullHeight - croppedHeight + 1)
         val widthOffset = Random.nextInt(fullWidth - croppedWidth + 1)
-        NDArray(buffer.clone, Array[Int](fullHeight, fullWidth, shape(2))).subarray(Array[Int](heightOffset, widthOffset, 0), Array[Int](heightOffset + croppedHeight, widthOffset + croppedWidth, shape(2))).toFlat()
+        NDArray(tempBuffer, Array[Int](fullHeight, fullWidth, shape(2))).subarray(Array[Int](heightOffset, widthOffset, 0), Array[Int](heightOffset + croppedHeight, widthOffset + croppedWidth, shape(2))).flatCopy(b)
       }
     } else {
       throw new Exception("The name is not `label` or `data`, name = " + name + "\n")

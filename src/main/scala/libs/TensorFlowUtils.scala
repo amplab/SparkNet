@@ -41,6 +41,16 @@ object TensorFlowUtils {
     result
   }
 
+  def newBuffer(dtype: Int, size: Int): Any = {
+    dtype match {
+      case DT_FLOAT => new Array[Float](size)
+      case DT_INT32 => new Array[Int](size)
+      case DT_INT64 => new Array[Long](size)
+      case DT_DOUBLE => new Array[Double](size)
+      case DT_UINT8 => new Array[Byte](size)
+    }
+  }
+
   def tensorToNDArray(t: Tensor): NDArray = {
     val shape = getTensorShape(t)
     val data = new Array[Float](shape.product)
