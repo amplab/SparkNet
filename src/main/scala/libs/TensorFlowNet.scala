@@ -48,7 +48,7 @@ class TensorFlowNet(graph: GraphDef, schema: StructType, preprocessor: TensorFlo
 
   val stepIndex = Array.range(0, graph.node_size).filter(i => nodeNames(i) == ("train//step"))(0)
 
-  val transformations = new Array[Any => Any](inputSize)
+  val transformations = new Array[(Any, Any) => Unit](inputSize)
   val inputIndices = new Array[Int](inputSize)
   for (i <- 0 to inputSize - 1) {
     val name = inputNames(i)
@@ -56,13 +56,15 @@ class TensorFlowNet(graph: GraphDef, schema: StructType, preprocessor: TensorFlo
     inputIndices(i) = columnNames.indexOf(name)
   }
 
+  val inputBuffers = Array.range(0, inputSize).map(i => Array.range(0, batchSize).map(_ => TensorFlowUtils.newBuffer(inputTypes(i), inputSizes(i))))
+
   def loadFrom(iterator: Iterator[Row]) = {
     var batchIndex = 0
     while (iterator.hasNext && batchIndex != batchSize) {
       val row = iterator.next
       for (i <- 0 to inputSize - 1) {
-        val result = transformations(i)(row(inputIndices(i)))
-        TensorFlowUtils.tensorFromFlatArray(inputs(i), result, batchIndex * inputSizes(i))
+        transformations(i)(row(inputIndices(i)), inputBuffers(i)(batchIndex))
+        TensorFlowUtils.tensorFromFlatArray(inputs(i), inputBuffers(i)(batchIndex), batchIndex * inputSizes(i))
       }
       batchIndex += 1
     }
