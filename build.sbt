@@ -6,7 +6,7 @@ classpathTypes += "maven-plugin"
 
 // resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
 
-resolvers += "javacpp" at "http://www.eecs.berkeley.edu/~rkn/snapshot-2016-03-01/"
+resolvers += "javacpp" at "http://www.eecs.berkeley.edu/~rkn/snapshot-2016-03-05/"
 
 libraryDependencies += "org.bytedeco" % "javacpp" % "1.2-SPARKNET"
 
