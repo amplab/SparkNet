@@ -1,0 +1,1 @@
+./spark-ec2 --key-pair=vansteen --identity-file=/home/vincent/.ssh/id_rsa.pub --region=eu-west-1 --zone=eu-west-1b --instance-type=g2.8xlarge --ami=ami-c0dd7db3 -s 2 --copy-aws-credentials --spot-price 1.5 --spark-version 1.5.0 --no-ganglia --user-data cloud-config.txt launch sparknet  
