@@ -64,7 +64,7 @@ object ImageNetApp {
     logger.log("numTestData = " + numTestData.toString)
 
     logger.log("computing mean image")
-    val meanImage = trainDF.map(row => row(0).asInstanceOf[Array[Byte]].map(e => e.toLong))
+    val meanImage = trainDF.map(row => row(0).asInstanceOf[Array[Byte]].map(e => (e & 0xFF).toLong))
                            .reduce((a, b) => (a, b).zipped.map(_ + _))
                            .map(e => (e.toDouble / numTrainData).toFloat)
 
