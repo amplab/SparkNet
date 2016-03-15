@@ -72,6 +72,40 @@ The flag `--slaves` specifies the number of Spark workers.
     /root/spark/bin/spark-submit --class apps.ImageNetApp /root/SparkNet/target/scala-2.10/sparknet-assembly-0.1-SNAPSHOT.jar 5 $S3_BUCKET
     ```
 
+## Installing SparkNet on an existing Spark cluster
+
+The specific instructions might depend on your cluster configurations, if you run into problems, make sure to share your experience on the mailing list.
+
+1. If you are going to use GPUs, make sure that CUDA-7.0 is installed on all the nodes.
+
+2. Depending on your configuration, you might have to add the following to your `~/.bashrc`, and run `source ~/.bashrc`.
+
+    ```
+    export LD_LIBRARY_PATH=/usr/local/cuda-7.0/targets/x86_64-linux/lib/
+    export _JAVA_OPTIONS=-Xmx8g
+    export SPARKNET_HOME=/root/SparkNet/
+    ```
+
+    Keep in mind to substitute in the right directories (the first one should contain the file `libcudart.so.7.0`).
+
+2. Clone the SparkNet repository `git clone https://github.com/amplab/SparkNet.git` in your home directory.
+
+3. Copy the SparkNet directory on all the nodes using
+
+    ```
+    ~/spark-ec2/copy-dir ~/SparkNet
+    ```
+
+3. Build SparkNet with
+
+    ```
+    cd ~/SparkNet
+    git pull
+    sbt assemble
+    ```
+
+4. Now you can for example run the CIFAR App as shown above.
+
 ## Building your own AMI
 
 1. Start an EC2 instance with Ubuntu 14.04 and a GPU instance type (e.g., g2.8xlarge). Suppose it has IP address xxx.xx.xx.xxx.
