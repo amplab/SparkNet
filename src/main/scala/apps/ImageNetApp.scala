@@ -87,7 +87,7 @@ object ImageNetApp {
       ReadSolverParamsFromTextFileOrDie(sparkNetHome + "/models/bvlc_reference_caffenet/solver.prototxt", solverParam)
       solverParam.clear_net()
       solverParam.set_allocated_net_param(netParam)
-      Caffe.set_mode(Caffe.GPU)
+      // Caffe.set_mode(Caffe.GPU)
       val solver = new CaffeSolver(solverParam, schema, new ImageNetPreprocessor(schema, meanImage, fullHeight, fullWidth, croppedHeight, croppedWidth))
       workerStore.put("netParam", netParam) // prevent netParam from being garbage collected
       workerStore.put("solverParam", solverParam) // prevent solverParam from being garbage collected
