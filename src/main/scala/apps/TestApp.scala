@@ -59,7 +59,7 @@ object TestApp {
     }
     val testImages = new Array[Array[Float]](nTest)
     val testLabels = new Array[Int](nTest)
-    for (i <- 0 to nData - 1) {
+    for (i <- 0 to nTest - 1) {
       testImages(i) = new Array[Float](size) // initialized to 0
       testLabels(i) = Random.nextInt(2)
     }
