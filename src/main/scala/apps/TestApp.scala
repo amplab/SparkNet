@@ -15,8 +15,8 @@ import loaders._
 import preprocessing._
 
 object TestApp {
-  val trainBatchSize = 5
-  val testBatchSize = 5
+  val trainBatchSize = 100
+  val testBatchSize = 100
   val channels = 3
   val height = 32
   val width = 32
@@ -47,8 +47,8 @@ object TestApp {
     val logger = new Logger(sparkNetHome + "/training_log_" + System.currentTimeMillis().toString + ".txt")
 
     logger.log("loading train data")
-    val nData = 20
-    val nTest = 5
+    val nData = 100
+    val nTest = 100
     val trainImages = new Array[Array[Float]](nData)
     val trainLabels = new Array[Int](nData)
     for (i <- 0 to nData - 1) {
