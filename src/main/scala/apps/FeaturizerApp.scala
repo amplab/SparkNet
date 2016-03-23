@@ -66,7 +66,7 @@ object FeaturizerApp {
       ReadProtoFromTextFileOrDie(sparkNetHome + "/models/cifar10/cifar10_quick_train_test.prototxt", netParam)
       val net = CaffeNet(netParam, schema, new DefaultPreprocessor(schema))
 
-      // Caffe.set_mode(Caffe.GPU)
+      Caffe.set_mode(Caffe.GPU)
       workerStore.put("netParam", netParam) // prevent netParam from being garbage collected
       workerStore.put("net", net) // prevent net from being garbage collected
     })
