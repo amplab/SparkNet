@@ -23,8 +23,6 @@ object TestApp {
   val imShape = Array(channels, height, width)
   val size = imShape.product
 
-  val workerStore = new WorkerStore()
-
   def main(args: Array[String]) {
     val conf = new SparkConf()
       .setAppName("Test")
@@ -117,7 +115,6 @@ object TestApp {
       logger.log("training", i)
       var it = trainData.iterator
       val t1 = System.currentTimeMillis()
-      val len = workerStore.get[Int]("trainPartitionSize")
       val t2 = System.currentTimeMillis()
       print("stuff took " + ((t2 - t1) * 1F / 1000F).toString + " s\n")
       for (j <- 0 to nData / trainBatchSize - 1) {
