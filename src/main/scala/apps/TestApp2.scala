@@ -50,25 +50,30 @@ object Test2App {
     val logger = new Logger(sparkNetHome + "/training_log_" + System.currentTimeMillis().toString + ".txt")
 
     val loader = new CifarLoader(sparkNetHome + "/data/cifar10/")
-    logger.log("loading train data")
-    var trainRDD = sc.parallelize(loader.trainImages.zip(loader.trainLabels))
-    logger.log("loading test data")
-    var testRDD = sc.parallelize(loader.testImages.zip(loader.testLabels))
+    // logger.log("loading train data")
+    // var trainRDD = sc.parallelize(loader.trainImages.zip(loader.trainLabels))
+    // logger.log("loading test data")
+    // var testRDD = sc.parallelize(loader.testImages.zip(loader.testLabels))
 
     // convert to dataframes
     val schema = StructType(StructField("data", ArrayType(FloatType), false) :: StructField("label", IntegerType, false) :: Nil)
-    var trainDF = sqlContext.createDataFrame(trainRDD.map{ case (a, b) => Row(a, b)}, schema)
-    var testDF = sqlContext.createDataFrame(testRDD.map{ case (a, b) => Row(a, b)}, schema)
+    // var trainDF = sqlContext.createDataFrame(trainRDD.map{ case (a, b) => Row(a, b)}, schema)
+    // var testDF = sqlContext.createDataFrame(testRDD.map{ case (a, b) => Row(a, b)}, schema)
 
-    logger.log("repartition data")
+    val trainData = loader.trainImages.zip(loader.trainLabels).map{ case (a, b) => Row(a, b) }
+    val testData = loader.testImages.zip(loader.testLabels).map{ case (a, b) => Row(a, b) }
+
+    // logger.log("repartition data")
     // trainDF = trainDF.repartition(numWorkers).cache()
     // testDF = testDF.repartition(numWorkers).cache()
 
-    val numTrainData = trainDF.count()
-    logger.log("numTrainData = " + numTrainData.toString)
+    val numTrainData = trainData.length
+    // val numTrainData = trainDF.count()
+    // logger.log("numTrainData = " + numTrainData.toString)
 
-    val numTestData = testDF.count()
-    logger.log("numTestData = " + numTestData.toString)
+    val numTestData = testData.length
+    // val numTestData = testDF.count()
+    // logger.log("numTestData = " + numTestData.toString)
 
     // val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
 
@@ -98,7 +103,7 @@ object Test2App {
 
       if (i % 5 == 0) {
         logger.log("testing", i)
-        val testIt = testDF.collect().iterator
+        val testIt = testData.iterator
         val numTestBatches = numTestData / testBatchSize
         var accuracy = 0F
         for (j <- 0 to numTestBatches.toInt - 1) {
@@ -111,7 +116,7 @@ object Test2App {
 
       logger.log("training", i)
       val syncInterval = 10
-      val trainIt = trainDF.collect().iterator
+      val trainIt = trainData.iterator
       val t1 = System.currentTimeMillis()
       val len = numTrainData.toInt
       val startIdx = Random.nextInt(len - syncInterval * trainBatchSize)
