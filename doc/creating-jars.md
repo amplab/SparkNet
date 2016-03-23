@@ -83,3 +83,73 @@ cd javacpp-presets
 bash cppbuild.sh install opencv caffe tensorflow
 mvn install --projects=.,opencv,caffe,tensorflow -Djavacpp.platform.dependency=false
 ```
+
+Creating JAR files for CentOS 6
+===============================
+
+These instructions are based on [the javacpp wiki](https://github.com/bytedeco/javacpp-presets/wiki/Build-Environments).
+
+First, install Docker using
+
+```
+sudo apt-get install docker.io
+```
+
+and run the CentOS 6 container with
+
+```
+sudo docker run -it centos:6 /bin/bash
+```
+
+Inside the container, run the following commands:
+
+```
+yum install git wget cmake emacs
+cd ~
+
+wget https://www.softwarecollections.org/en/scls/rhscl/rh-java-common/epel-6-x86_64/download/rhscl-rh-java-common-epel-6-x86_64.noarch.rpm
+wget https://www.softwarecollections.org/en/scls/rhscl/maven30/epel-6-x86_64/download/rhscl-maven30-epel-6-x86_64.noarch.rpm
+yum install scl-utils *.rpm
+
+cd /etc/yum.repos.d/
+wget http://linuxsoft.cern.ch/cern/devtoolset/slc6-devtoolset.repo
+rpm --import http://linuxsoft.cern.ch/cern/slc6X/x86_64/RPM-GPG-KEY-cern
+
+yum install devtoolset-2 maven30
+scl enable devtoolset-2 maven30 bash
+
+cd ~
+git clone https://github.com/bytedeco/javacpp.git
+cp javacpp
+mvn install
+cd ..
+```
+
+```
+git clone https://github.com/bytedeco/javacpp-presets.git
+cd javacpp-presets
+```
+Change `CPU_ONLY=0` to `CPU_ONLY=1` in the `linux-x86_64` section of `caffe/cppbuild.sh`,
+apply the following changes to `opencv/cppbuild.sh`:
+```
+-download https://github.com/Itseez/opencv/archive/$OPENCV_VERSION.tar.gz opencv-$OPENCV_VERSION.tar.gz
+-download https://github.com/Itseez/opencv_contrib/archive/$OPENCV_VERSION.tar.gz opencv_contrib-$OPENCV_VERSION.tar.gz
++wget https://github.com/Itseez/opencv/archive/$OPENCV_VERSION.zip -O opencv-$OPENCV_VERSION.zip
++wget https://github.com/Itseez/opencv_contrib/archive/$OPENCV_VERSION.zip -O opencv_contrib-$OPENCV_VERSION.zip
+
+-tar -xzvf ../opencv-$OPENCV_VERSION.tar.gz
+-tar -xzvf ../opencv_contrib-$OPENCV_VERSION.tar.gz
++unzip ../opencv-$OPENCV_VERSION.zip
++unzip ../opencv_contrib-$OPENCV_VERSION.zip
+```
+and these changes to `caffe/src/main/java/org/bytedeco/javacpp/presets/caffe.java`:
+```
+-    @Platform(value = {"linux-x86_64", "macosx-x86_64"}, define = {"SHARED_PTR_NAMESPACE boost", "USE_LEVELDB", "USE_LMDB", "USE_OPENCV"}) })
++    @Platform(value = {"linux-x86_64", "macosx-x86_64"}, define = {"SHARED_PTR_NAMESPACE boost", "USE_LEVELDB", "USE_LMDB", "USE_OPENCV", "CPU_ONLY"}) })
+```
+
+Then build the presets using:
+```
+./cppbuild.sh install opencv caffe
+mvn install -Djavacpp.platform.dependency=false --projects .,opencv,caffe
+```
