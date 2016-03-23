@@ -69,11 +69,11 @@ object Test2App {
 
     val numTrainData = trainData.length
     // val numTrainData = trainDF.count()
-    // logger.log("numTrainData = " + numTrainData.toString)
+    logger.log("numTrainData = " + numTrainData.toString)
 
     val numTestData = testData.length
     // val numTestData = testDF.count()
-    // logger.log("numTestData = " + numTestData.toString)
+    logger.log("numTestData = " + numTestData.toString)
 
     // val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
 
