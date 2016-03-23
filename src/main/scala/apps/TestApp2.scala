@@ -50,37 +50,18 @@ object Test2App {
     val logger = new Logger(sparkNetHome + "/training_log_" + System.currentTimeMillis().toString + ".txt")
 
     val loader = new CifarLoader(sparkNetHome + "/data/cifar10/")
-    // logger.log("loading train data")
-    // var trainRDD = sc.parallelize(loader.trainImages.zip(loader.trainLabels))
-    // logger.log("loading test data")
-    // var testRDD = sc.parallelize(loader.testImages.zip(loader.testLabels))
 
     // convert to dataframes
     val schema = StructType(StructField("data", ArrayType(FloatType), false) :: StructField("label", IntegerType, false) :: Nil)
-    // var trainDF = sqlContext.createDataFrame(trainRDD.map{ case (a, b) => Row(a, b)}, schema)
-    // var testDF = sqlContext.createDataFrame(testRDD.map{ case (a, b) => Row(a, b)}, schema)
 
     val trainData = loader.trainImages.zip(loader.trainLabels).map{ case (a, b) => Row(a, b) }
     val testData = loader.testImages.zip(loader.testLabels).map{ case (a, b) => Row(a, b) }
 
-    // logger.log("repartition data")
-    // trainDF = trainDF.repartition(numWorkers).cache()
-    // testDF = testDF.repartition(numWorkers).cache()
-
     val numTrainData = trainData.length
-    // val numTrainData = trainDF.count()
     logger.log("numTrainData = " + numTrainData.toString)
 
     val numTestData = testData.length
-    // val numTestData = testDF.count()
     logger.log("numTestData = " + numTestData.toString)
-
-    // val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
-
-    // trainDF.foreachPartition(iter => workerStore.put("trainPartitionSize", iter.size))
-    // testDF.foreachPartition(iter => workerStore.put("testPartitionSize", iter.size))
-    // logger.log("trainPartitionSizes = " + workers.map(_ => workerStore.get[Int]("trainPartitionSize")).collect().deep.toString)
-    // logger.log("testPartitionSizes = " + workers.map(_ => workerStore.get[Int]("testPartitionSize")).collect().deep.toString)
 
     val netParam = new NetParameter()
     ReadProtoFromTextFileOrDie(sparkNetHome + "/models/cifar10/cifar10_quick_train_test.prototxt", netParam)
@@ -88,7 +69,7 @@ object Test2App {
     ReadSolverParamsFromTextFileOrDie(sparkNetHome + "/models/cifar10/cifar10_quick_solver.prototxt", solverParam)
     solverParam.clear_net()
     solverParam.set_allocated_net_param(netParam)
-    Caffe.set_mode(Caffe.GPU)
+    // Caffe.set_mode(Caffe.GPU)
     val solver = new CaffeSolver(solverParam, schema, new DefaultPreprocessor(schema))
 
     // initialize weights on master
