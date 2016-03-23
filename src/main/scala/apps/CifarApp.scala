@@ -134,7 +134,15 @@ object CifarApp {
           val t2 = System.currentTimeMillis()
           print("stuff took " + ((t2 - t1) * 1F / 1000F).toString + " s\n")
           for (j <- 0 to syncInterval - 1) {
+            print("syncInterval ", j)
             workerStore.get[CaffeSolver]("solver").step(it)
+            val caffeNet = workerStore.get[CaffeSolver]("solver").trainNet.getNet
+            val name = "prob"
+            val floatBlob = caffeNet.blob_by_name(name)
+            if (floatBlob == null) {
+              throw new IllegalArgumentException("The net does not have a layer named " + name + ".\n")
+            }
+            print(JavaCPPUtils.floatBlobToNDArray(floatBlob))
           }
           val t3 = System.currentTimeMillis()
           print("iters took " + ((t3 - t2) * 1F / 1000F).toString + " s\n")
