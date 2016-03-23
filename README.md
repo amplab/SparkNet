@@ -175,3 +175,12 @@ The specific instructions might depend on your cluster configurations, if you ru
     Spark expects `JAVA_HOME` to be set in your `~/.bash_profile` and the launch script `SparkNet/ec2/spark-ec2` will give an error if it isn't there.
 18. Clear your bash history `cat /dev/null > ~/.bash_history && history -c && exit`.
 19. Now you can create an image of your instance, and you're all set! This is the procedure that we used to create our AMI.
+
+## JavaCPP Binaries
+
+We have built the JavaCPP binaries for a couple platforms.
+They are stored at the following locations:
+
+1. Ubuntu with GPUs: http://www.eecs.berkeley.edu/~rkn/snapshot-2016-03-05/
+2. Ubuntu with CPUs: http://www.eecs.berkeley.edu/~rkn/snapshot-2016-03-16-CPU/
+3. CentOS 6 with CPUs: http://www.eecs.berkeley.edu/~rkn/snapshot-2016-03-23-CENTOS6-CPU/
