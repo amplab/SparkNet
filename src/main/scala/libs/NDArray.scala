@@ -47,6 +47,10 @@ class NDArray private(val javaArray: JavaNDArray) extends java.io.Serializable {
   def scalarDivide(v: Float) = {
     javaArray.scalarDivide(v)
   }
+
+  override def toString() = {
+    javaArray.toString()
+  }
 }
 
 object NDArray {
