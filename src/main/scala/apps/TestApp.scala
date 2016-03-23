@@ -17,9 +17,9 @@ import preprocessing._
 object TestApp {
   val trainBatchSize = 5
   val testBatchSize = 5
-  val channels = 1
-  val height = 5
-  val width = 5
+  val channels = 3
+  val height = 32
+  val width = 32
   val imShape = Array(channels, height, width)
   val size = imShape.product
 
