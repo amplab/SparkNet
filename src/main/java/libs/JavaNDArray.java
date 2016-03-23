@@ -27,6 +27,10 @@ public class JavaNDArray implements java.io.Serializable {
     this(data, shape.length, shape, 0, JavaNDUtils.calcDefaultStrides(shape));
   }
 
+  public int shape(int axis) {
+    return shape[axis];
+  }
+
   public JavaNDArray slice(int axis, int index) {
     return new JavaNDArray(data, dim - 1, JavaNDUtils.removeIndex(shape, axis), offset + index * strides[axis], JavaNDUtils.removeIndex(strides, axis));
   }
@@ -108,6 +112,11 @@ public class JavaNDArray implements java.io.Serializable {
     return result;
   }
 
+  public JavaNDArray flatten() {
+    int[] flatShape = {JavaNDUtils.arrayProduct(shape)};
+    return new JavaNDArray(data, flatShape.length, flatShape, 0, JavaNDUtils.calcDefaultStrides(flatShape));
+  }
+
   // Note that this buffer may be larger than the apparent size of the
   // JavaByteNDArray. This could happen if the current object came from a
   // subarray or slice call.
@@ -176,5 +185,55 @@ public class JavaNDArray implements java.io.Serializable {
       return false;
     }
     return true;
+  }
+
+  private static void print1DArray(JavaNDArray array, StringBuilder builder) {
+    Formatter formatter = new Formatter(builder);
+    for(int i = 0; i < array.shape(0); i++) {
+      formatter.format("%1.3e ", array.get(i));
+    }
+  }
+
+  private static void print2DArray(JavaNDArray array, StringBuilder builder) {
+    Formatter formatter = new Formatter(builder);
+    for (int i = 0; i < array.shape(0); i++) {
+      for (int j = 0; j < array.shape(1); j++) {
+        formatter.format("%1.3e ", array.get(i, j));
+      }
+      if (i != array.shape(0) - 1)
+        builder.append("\n");
+    }
+  }
+
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append("NDArray of shape ");
+    builder.append(shape[0]);
+    for(int d = 1; d < dim; d++) {
+      builder.append("x");
+      builder.append(shape[d]);
+    }
+    builder.append("\n");
+    if (dim == 1) {
+      print1DArray(this, builder);
+    }
+    if (dim == 2) {
+      print2DArray(this, builder);
+    }
+    if (dim == 3) {
+      builder.append("\n");
+      for(int i = 0; i < shape(0); i++) {
+        builder.append("[").append(i).append(", :, :] = \n");
+        JavaNDArray s = slice(0, i);
+        print2DArray(s, builder);
+        if (i != shape(0) - 1)
+          builder.append("\n\n");
+      }
+    }
+    if (dim > 3) {
+      builder.append("flattened array = \n");
+      print1DArray(this.flatten(), builder);
+    }
+    return builder.toString();
   }
 }
