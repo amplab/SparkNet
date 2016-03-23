@@ -78,7 +78,7 @@ class CaffeNet(netParam: NetParameter, schema: StructType, preprocessor: Preproc
     }
     for (i <- 0 to inputSize - 1) {
       val blob = data.get(i)
-      val buffer = blob.cpu_data()
+      val buffer = blob.mutable_cpu_data()
       buffer.put(inputBuffer(i), 0, batchSize * inputBufferSize(i))
     }
   }
@@ -140,7 +140,7 @@ class CaffeNet(netParam: NetParameter, schema: StructType, preprocessor: Preproc
         val shape = JavaCPPUtils.getFloatBlobShape(blob)
         assert(shape.deep == weights.allWeights(layerNames(i))(j).shape.deep) // check that weights are the correct shape
         val flatWeights = weights.allWeights(layerNames(i))(j).toFlat() // this allocation can be avoided
-        blob.cpu_data.put(flatWeights, 0, flatWeights.length)
+        blob.mutable_cpu_data.put(flatWeights, 0, flatWeights.length)
       }
     }
   }
