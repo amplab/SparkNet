@@ -137,9 +137,9 @@ object ImageNetApp {
       )
 
       logger.log("collecting weights", i)
-      netWeights = workers.map(_ => { workerStore.get[CaffeSolver]("solver").trainNet.getWeights() }).reduce((a, b) => WeightCollection.add(a, b))
-      netWeights.scalarDivide(1F * numWorkers)
-      logger.log("weight = " + netWeights.allWeights("conv1")(0).toFlat()(0).toString, i)
+      netWeights = workers.map(_ => { workerStore.get[CaffeSolver]("solver").trainNet.getWeights() }).reduce((a, b) => CaffeWeightCollection.add(a, b))
+      CaffeWeightCollection.scalarDivide(netWeights, 1F * numWorkers)
+      logger.log("weight = " + netWeights("conv1")(0).toFlat()(0).toString, i)
       i += 1
     }
 

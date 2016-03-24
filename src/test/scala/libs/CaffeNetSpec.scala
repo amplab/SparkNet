@@ -60,7 +60,7 @@ class CaffeNetSpec extends FlatSpec {
     val weightsBefore = net.getWeights()
     val outputs = net.forward(inputs.iterator)
     val weightsAfter = net.getWeights()
-    assert(WeightCollection.checkEqual(weightsBefore, weightsAfter, 1e-10F)) // weights should be equal
+    assert(CaffeWeightCollection.checkEqual(weightsBefore, weightsAfter, 1e-10F)) // weights should be equal
   }
 
   "Calling forwardBackward" should "leave weights unchanged" in {
@@ -73,7 +73,7 @@ class CaffeNetSpec extends FlatSpec {
     val weightsBefore = net.getWeights()
     net.forwardBackward(inputs.iterator)
     val weightsAfter = net.getWeights()
-    assert(WeightCollection.checkEqual(weightsBefore, weightsAfter, 1e-10F)) // weights should be equal
+    assert(CaffeWeightCollection.checkEqual(weightsBefore, weightsAfter, 1e-10F)) // weights should be equal
   }
 
   "Saving and loading the weights" should "leave the weights unchanged" in {
@@ -84,9 +84,9 @@ class CaffeNetSpec extends FlatSpec {
     val net1 = CaffeNet(netParam, schema, new DefaultPreprocessor(schema))
     net1.saveWeightsToFile(sparkNetHome + "/temp/cifar10.caffemodel")
     val net2 = CaffeNet(netParam, schema, new DefaultPreprocessor(schema))
-    assert(!WeightCollection.checkEqual(net1.getWeights(), net2.getWeights(), 1e-10F)) // weights should not be equal
+    assert(!CaffeWeightCollection.checkEqual(net1.getWeights(), net2.getWeights(), 1e-10F)) // weights should not be equal
     net2.copyTrainedLayersFrom(sparkNetHome + "/temp/cifar10.caffemodel")
-    assert(WeightCollection.checkEqual(net1.getWeights(), net2.getWeights(), 1e-10F)) // weights should be equal
+    assert(CaffeWeightCollection.checkEqual(net1.getWeights(), net2.getWeights(), 1e-10F)) // weights should be equal
   }
 
   "Putting input into net and taking it out" should "not change the input" in {
