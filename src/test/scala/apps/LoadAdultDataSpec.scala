@@ -19,11 +19,13 @@ class LoadAdultDataSpec extends FlatSpec {
 
     val function0 = preprocessor.convert("C0", Array[Int](1))
     val function2 = preprocessor.convert("C2", Array[Int](1))
-    val result0 = function0(df.take(1)(0)(0))
-    val result2 = function2(df.take(1)(0)(2))
+    val result0 = new Array[Float](1)
+    val result2 = new Array[Float](1)
+    function0(df.take(1)(0)(0), result0)
+    function2(df.take(1)(0)(2), result2)
 
-    assert((result0.get(Array[Int](0)) - 39.0).abs <= 1e-4)
-    assert((result2.get(Array[Int](0)) - 77516.0).abs <= 1e-4)
+    assert((result0(0) - 39.0).abs <= 1e-4)
+    assert((result2(0) - 77516.0).abs <= 1e-4)
 
     sc.stop()
   }

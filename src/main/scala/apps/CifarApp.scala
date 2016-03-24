@@ -111,7 +111,7 @@ object CifarApp {
             val numTestBatches = workerStore.get[Int]("testPartitionSize") / testBatchSize
             var accuracy = 0F
             for (j <- 0 to numTestBatches - 1) {
-              val out = workerStore.get[CaffeSolver]("solver").trainNet.forward(testIt)
+              val out = workerStore.get[CaffeSolver]("solver").trainNet.forward(testIt, List("accuracy", "loss", "prob"))
               accuracy += out("accuracy").get(Array())
             }
             Array[(Float, Int)]((accuracy, numTestBatches)).iterator

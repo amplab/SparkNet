@@ -1,0 +1,13 @@
+name: "test"
+input: "data"
+input_shape {
+  dim: 256
+  dim: 3
+  dim: 227
+  dim: 227
+}
+input: "label"
+input_shape {
+  dim: 256
+  dim: 1
+}

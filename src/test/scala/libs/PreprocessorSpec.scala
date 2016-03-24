@@ -31,7 +31,9 @@ class PreprocessorSpec extends FlatSpec with BeforeAndAfterAll {
         val convert = preprocessor.convert("x", Array[Int](1))
         var x = Row(v)
         val df = sqlContext.createDataFrame(sc.parallelize(Array(x)), schema)
-        assert(convert(df.take(1)(0)(0)).toFlat().deep == Array[Float](1).deep)
+        val buffer = new Array[Float](1)
+        convert(df.take(1)(0)(0), buffer)
+        assert(buffer.deep == Array[Float](1).deep)
       }
     }
   }
@@ -47,7 +49,9 @@ class PreprocessorSpec extends FlatSpec with BeforeAndAfterAll {
         val convert = preprocessor.convert("x", Array[Int](1, 3))
         var x = Row(v)
         val df = sqlContext.createDataFrame(sc.parallelize(Array(x)), schema)
-        assert(convert(df.take(1)(0)(0)).toFlat().deep == Array[Float](0, 1, 2).deep)
+        val buffer = new Array[Float](3)
+        convert(df.take(1)(0)(0), buffer)
+        assert(buffer.deep == Array[Float](0, 1, 2).deep)
       }
     }
   }
@@ -66,8 +70,9 @@ class PreprocessorSpec extends FlatSpec with BeforeAndAfterAll {
         val df = sqlContext.createDataFrame(sc.parallelize(Array(x)), schema)
         val startTime = System.currentTimeMillis()
         val xExtracted = df.take(1)(0)
+        val buffer = new Array[Float](256 * 256)
         for (i <- 0 to 256 - 1) {
-          convert(xExtracted(0))
+          convert(xExtracted(0), buffer)
         }
         val endTime = System.currentTimeMillis()
         val totalTime = (endTime - startTime) * 1F / 1000
@@ -89,7 +94,9 @@ class PreprocessorSpec extends FlatSpec with BeforeAndAfterAll {
     val image = Array.range(0, 3 * fullHeight * fullWidth).map(e => e.toByte)
     var x = Row(image)
     val df = sqlContext.createDataFrame(sc.parallelize(Array(x)), schema)
-    assert(convert(df.take(1)(0)(0)).toFlat().deep == (image.map(e => e.toFloat), meanImage).zipped.map(_ - _).deep)
+    val buffer = new Array[Float](3 * croppedHeight * croppedWidth)
+    convert(df.take(1)(0)(0), buffer)
+    assert(buffer.deep == (image.map(e => e.toFloat), meanImage).zipped.map(_ - _).deep)
   }
 
   "ImageNetPreprocessor" should "subtract mean and crop image" in {
@@ -104,7 +111,9 @@ class PreprocessorSpec extends FlatSpec with BeforeAndAfterAll {
     val image = Array.range(0, 3 * fullHeight * fullWidth).map(e => e.toByte)
     var x = Row(image)
     val df = sqlContext.createDataFrame(sc.parallelize(Array(x)), schema)
-    val convertedImage = convert(df.take(1)(0)(0))
+    val buffer = new Array[Float](3 * croppedHeight * croppedWidth)
+    convert(df.take(1)(0)(0), buffer)
+    val convertedImage = NDArray(buffer, Array[Int](3, croppedHeight, croppedWidth))
     assert(convertedImage.shape.deep == Array[Int](3, croppedHeight, croppedWidth).deep)
     val cornerVal = convertedImage.get(Array[Int](0, 0, 0))
     assert(Set[Float](0, 1, 5, 6, 10, 11).contains(cornerVal))
@@ -127,13 +136,14 @@ class PreprocessorSpec extends FlatSpec with BeforeAndAfterAll {
     val df = sqlContext.createDataFrame(sc.parallelize(Array(x)), schema)
     val xExtracted = df.take(1)(0)
     val startTime = System.currentTimeMillis()
+    val buffer = new Array[Float](3 * croppedHeight * croppedWidth)
     for (i <- 0 to 256 - 1) {
-      convert(xExtracted(0))
+      convert(xExtracted(0), buffer)
     }
     val endTime = System.currentTimeMillis()
     val totalTime = (endTime - startTime) * 1F / 1000
     print("ImageNetPreprocessor converted 256 images in " + totalTime.toString + "s\n")
-    assert(totalTime <= 1.0)
+    assert(totalTime <= 0.2)
   }
 
 }
