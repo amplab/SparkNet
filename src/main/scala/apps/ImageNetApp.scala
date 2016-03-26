@@ -69,8 +69,8 @@ object ImageNetApp {
                            .map(e => (e.toDouble / numTrainData).toFloat)
 
     logger.log("coalescing") // if you want to shuffle your data, replace coalesce with repartition
-    trainDF = trainDF.coalesce(numWorkers)
-    testDF = testDF.coalesce(numWorkers)
+    trainDF = trainDF.coalesce(numWorkers).cache()
+    testDF = testDF.coalesce(numWorkers).cache()
 
     val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
 
