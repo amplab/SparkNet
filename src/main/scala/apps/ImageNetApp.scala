@@ -49,7 +49,7 @@ object ImageNetApp {
 
     val loader = new ImageNetLoader(s3Bucket)
     logger.log("loading train data")
-    var trainRDD = loader.apply(sc, "ILSVRC2012_img_train/train.0000", "train.txt", fullHeight, fullWidth)
+    var trainRDD = loader.apply(sc, "ILSVRC2012_img_train/train.000", "train.txt", fullHeight, fullWidth)
     logger.log("loading test data")
     val testRDD = loader.apply(sc, "ILSVRC2012_img_val/val.00", "val.txt", fullHeight, fullWidth)
 
@@ -69,8 +69,8 @@ object ImageNetApp {
                            .map(e => (e.toDouble / numTrainData).toFloat)
 
     logger.log("coalescing") // if you want to shuffle your data, replace coalesce with repartition
-    trainDF = trainDF.coalesce(numWorkers)
-    testDF = testDF.coalesce(numWorkers)
+    trainDF = trainDF.coalesce(numWorkers).cache()
+    testDF = testDF.coalesce(numWorkers).cache()
 
     val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
 
@@ -124,7 +124,7 @@ object ImageNetApp {
       }
 
       logger.log("training", i)
-      val syncInterval = 5
+      val syncInterval = 50
       trainDF.foreachPartition(
         trainIt => {
           val len = workerStore.get[Int]("trainPartitionSize")
