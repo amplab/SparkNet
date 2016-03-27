@@ -80,15 +80,20 @@ class ImageNetPreprocessor(schema: StructType, meanImage: Array[Float], fullHeig
           if (buffer.length != shape.product) { throw new Exception("buffer.length and shape.product don't agree, buffer has length " + buffer.length.toString + ", but shape is " + shape.deep.toString) }
           element match {
             case element: Array[Byte] => {
+              try {
+                val im = ImageIO.read(new ByteArrayInputStream(element))
+                val resizedImage = Thumbnails.of(im).forceSize(fullWidth, fullHeight).asBufferedImage()
+                val decompressedResizedImage = ScaleAndConvert.BufferedImageToByteArray(resizedImage)
 
-              val im = ImageIO.read(new ByteArrayInputStream(element))
-              val resizedImage = Thumbnails.of(im).forceSize(fullWidth, fullHeight).asBufferedImage()
-              val decompressedResizedImage = ScaleAndConvert.BufferedImageToByteArray(resizedImage)
-
-              var index = 0
-              while (index < 3 * fullHeight * fullWidth) {
-                tempBuffer(index) = (decompressedResizedImage(index) & 0xFF).toFloat - meanImage(index)
-                index += 1
+                var index = 0
+                while (index < 3 * fullHeight * fullWidth) {
+                  tempBuffer(index) = (decompressedResizedImage(index) & 0xFF).toFloat - meanImage(index)
+                  index += 1
+                }
+              } catch { // TODO(rkn): handle this better
+                case e: java.lang.IllegalArgumentException => Unit
+                case e: javax.imageio.IIOException => Unit
+                case e: java.lang.NullPointerException => Unit
               }
             }
           }
