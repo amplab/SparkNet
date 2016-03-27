@@ -82,6 +82,7 @@ class PreprocessorSpec extends FlatSpec with BeforeAndAfterAll {
     }
   }
 
+  /*
   "ImageNetPreprocessor" should "subtract mean" in {
     val fullHeight = 4
     val fullWidth = 5
@@ -145,5 +146,6 @@ class PreprocessorSpec extends FlatSpec with BeforeAndAfterAll {
     print("ImageNetPreprocessor converted 256 images in " + totalTime.toString + "s\n")
     assert(totalTime <= 0.2)
   }
+  */
 
 }
