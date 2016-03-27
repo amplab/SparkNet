@@ -2,9 +2,17 @@ package libs
 
 import scala.util.Random
 
+// import java.awt.image.DataBufferByte
+import java.io.ByteArrayInputStream
+import javax.imageio.ImageIO
+import net.coobird.thumbnailator._
+import scala.collection.mutable.ArrayBuffer
+
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row}
 import scala.collection.mutable._
+
+import preprocessing._
 
 // The Preprocessor is provides a function for reading data from a dataframe row
 // into the net
@@ -72,9 +80,14 @@ class ImageNetPreprocessor(schema: StructType, meanImage: Array[Float], fullHeig
           if (buffer.length != shape.product) { throw new Exception("buffer.length and shape.product don't agree, buffer has length " + buffer.length.toString + ", but shape is " + shape.deep.toString) }
           element match {
             case element: Array[Byte] => {
+
+              val im = ImageIO.read(new ByteArrayInputStream(element))
+              val resizedImage = Thumbnails.of(im).forceSize(fullWidth, fullHeight).asBufferedImage()
+              val decompressedResizedImage = ScaleAndConvert.BufferedImageToByteArray(resizedImage)
+
               var index = 0
               while (index < 3 * fullHeight * fullWidth) {
-                tempBuffer(index) = (element(index) & 0xFF).toFloat - meanImage(index)
+                tempBuffer(index) = (decompressedResizedImage(index) & 0xFF).toFloat - meanImage(index)
                 index += 1
               }
             }
