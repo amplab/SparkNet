@@ -100,7 +100,7 @@ The flag `--slaves` specifies the number of Spark workers.
 12. `apt-get install awscli s3cmd`
 13. Install Java `apt-get install openjdk-7-jdk`.
 14. Clone the SparkNet repository `git clone https://github.com/amplab/SparkNet.git` in your home directory.
-15. Build SparkNet with `cd ~/SparkNet` and `sbt assemble`.
+15. Build SparkNet with `cd ~/SparkNet` and `sbt assembly`.
 16. Add the following to your `~/.bashrc`:
 
     ```
