@@ -101,7 +101,7 @@ The specific instructions might depend on your cluster configurations, if you ru
     ```
     cd ~/SparkNet
     git pull
-    sbt assemble
+    sbt assembly
     ```
 
 4. Now you can for example run the CIFAR App as shown above.
@@ -160,7 +160,7 @@ The specific instructions might depend on your cluster configurations, if you ru
     ```
     cd ~/SparkNet
     git pull
-    sbt assemble
+    sbt assembly
     ```
 17. Create the file `~/.bash_profile` and add the following:
 
