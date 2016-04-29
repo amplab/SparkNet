@@ -77,6 +77,9 @@ object FeaturizerApp {
     val broadcastWeights = sc.broadcast(netWeights)
     logger.log("setting weights on workers")
     workers.foreach(_ => workerStore.get[CaffeNet]("net").setWeights(broadcastWeights.value))
+    // avoiding a memory leak:
+    broadcastWeights.unpersist()
+    broadcastWeights.destroy()
 
     // featurize the images
     val featurizedDF = trainDF.mapPartitions( it => {

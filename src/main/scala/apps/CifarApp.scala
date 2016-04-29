@@ -103,6 +103,9 @@ object CifarApp {
       val broadcastWeights = sc.broadcast(netWeights)
       logger.log("setting weights on workers", i)
       workers.foreach(_ => workerStore.get[CaffeSolver]("solver").trainNet.setWeights(broadcastWeights.value))
+      // avoiding a memory leak:
+      broadcastWeights.unpersist()
+      broadcastWeights.destroy()
 
       if (i % 5 == 0) {
         logger.log("testing", i)
