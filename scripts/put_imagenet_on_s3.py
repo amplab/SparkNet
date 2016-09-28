@@ -31,7 +31,8 @@ new_image_size = None
 if args.new_width != -1 and args.new_height != -1:
     new_image_size = (args.new_width, args.new_height)
 
-s3 = boto3.client('s3')
+s3 = boto3.client('s3',aws_access_key_id='AKIAJQE3T6QAPIC4Y35A',
+    aws_secret_access_key='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')
 
 """Change this function if you want to upload to HDFS or local storage"""
 def upload_file(targetname, stream):

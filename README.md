@@ -3,6 +3,16 @@ Distributed Neural Networks for Spark.
 Details are available in the [paper](http://arxiv.org/abs/1511.06051).
 Ask questions on the [sparknet-users mailing list](https://groups.google.com/forum/#!forum/sparknet-users)!
 
+The research is done on GoogleNet inception v1 using LMDB with any number of partiontioned data.
+
+To further batch input research, should use javacpp preset caffe version rc3-1.2
+.
+
+How to prepare data into parquet format is inside the code which are commented out. 
+
+
+You need redi server to handle distribute of worker into correct GPU interfaces.Just start a docker rediserver in standard port.
+
 ## Quick Start
 **Start a Spark cluster using our AMI**
 
@@ -101,7 +111,7 @@ The specific instructions might depend on your cluster configurations, if you ru
     ```
     cd ~/SparkNet
     git pull
-    sbt assembly
+    sbt assemble
     ```
 
 4. Now you can for example run the CIFAR App as shown above.
@@ -160,7 +170,7 @@ The specific instructions might depend on your cluster configurations, if you ru
     ```
     cd ~/SparkNet
     git pull
-    sbt assembly
+    sbt assemble
     ```
 17. Create the file `~/.bash_profile` and add the following:
 

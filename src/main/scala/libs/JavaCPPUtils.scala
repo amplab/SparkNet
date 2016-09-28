@@ -14,14 +14,25 @@ object JavaCPPUtils {
       i += 1
     }
     NDArray(data, shape)
+
   }
 
   def getFloatBlobShape(floatBlob: FloatBlob): Array[Int] = {
+
     val numAxes = floatBlob.num_axes()
     val shape = new Array[Int](numAxes)
     for (k <- 0 to numAxes - 1) {
-      shape(k) = floatBlob.shape.get(k)
+      shape(k) = k match {
+        case 0 => floatBlob.num()
+        case 1 => floatBlob.channels()
+        case 2 => floatBlob.height()
+        case 3 => floatBlob.width()
+
+      }
+      //shape(k) = floatBlob.shape.get(k)
     }
+   // println("shape=" + shape.toList.toString())
+   // println("let see=" +floatBlob.num() + "x" + floatBlob.channels()  +"x" + floatBlob.height() + "x" + floatBlob.width())
     shape
   }
 
