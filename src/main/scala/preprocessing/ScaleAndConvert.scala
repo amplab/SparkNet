@@ -1,16 +1,10 @@
 package preprocessing
 
-import java.awt.image.DataBufferByte
+import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import javax.imageio.ImageIO
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.JavaConversions._
 import net.coobird.thumbnailator._
-
-import org.apache.spark.rdd.RDD
-
-import libs._
 
 object ScaleAndConvert {
   def BufferedImageToByteArray(image: java.awt.image.BufferedImage) : Array[Byte] = {
@@ -35,15 +29,23 @@ object ScaleAndConvert {
 
   def decompressImageAndResize(compressedImage: Array[Byte], height: Int, width: Int) : Option[Array[Byte]] = {
     // this method takes a JPEG, decompresses it, and resizes it
+    var resizedImage: BufferedImage = null
     try {
       val im = ImageIO.read(new ByteArrayInputStream(compressedImage))
-      val resizedImage = Thumbnails.of(im).forceSize(width, height).asBufferedImage()
+      resizedImage = Thumbnails.of(im).forceSize(width, height).asBufferedImage()
       Some(BufferedImageToByteArray(resizedImage))
+
     } catch {
       // If images can't be processed properly, just ignore them
       case e: java.lang.IllegalArgumentException => None
       case e: javax.imageio.IIOException => None
       case e: java.lang.NullPointerException => None
+      case e: java.io.IOException => {
+               print("trouble IO Closed")
+               None
+               }
+    } finally {
+      if( resizedImage != null ) resizedImage.flush()
     }
   }
 }

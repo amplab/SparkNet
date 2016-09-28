@@ -1,0 +1,16 @@
+net: "/data02/nhe/SparkNet/models/bvlc_googlenet/train_val.prototxt"
+test_iter: 1000
+test_interval: 2000
+test_initialization: false
+display: 200
+average_loss: 40
+base_lr: 0.00001
+lr_policy: "step"
+stepsize: 20000
+gamma: 0.4
+max_iter: 10000000
+momentum: 0.95
+weight_decay: 0.0002
+snapshot: 40000
+snapshot_prefix: "googlenet"
+solver_mode: GPU
